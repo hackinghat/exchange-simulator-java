@@ -1,0 +1,16 @@
+#barLabel
+{
+    -fx-border-color: red;
+}
+.text-field
+{
+    -fx-border-color: green;
+}
+#rectangle
+{
+    -fx-border-color: yellow;
+}
+#label
+{
+    -fx-border-color: black;
+}
