@@ -7,7 +7,7 @@
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>exchangesimulator</name>
+  <name>exchange-simulator-java</name>
   <url>http://maven.apache.org</url>
 
   <properties>
@@ -17,23 +17,15 @@
   </properties>
 
   <dependencies>
-    <!-- User interface (this is required when using Open Java FX)-->
-    <dependency>
-      <groupId>com.oracle</groupId>
-      <artifactId>javafx</artifactId>
-      <version>2.2.3</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/lib/jfxrt.jar</systemPath>
-    </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.13.2.2</version>
+      <version>2.14.2</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-jsr310</artifactId>
-      <version>2.13.2</version>
+      <version>2.14.2</version>
     </dependency>
     <!-- QuickFix/J -->
     <dependency>
@@ -66,17 +58,17 @@
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>streams-quickstart-java</artifactId>
-      <version>3.1.0</version>
+      <version>3.4.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-clients</artifactId>
-      <version>3.1.0</version>
+      <version>3.4.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-streams</artifactId>
-      <version>3.1.0</version>
+      <version>3.4.0</version>
     </dependency>
     <!-- Unit testing -->
     <dependency>
