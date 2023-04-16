@@ -21,7 +21,7 @@ import static java.time.temporal.ChronoUnit.NANOS;
 public class TimeMachine
 {
     private static final Logger LOG = LogManager.getLogger(TimeMachine.class);
-
+    private static final double HIGH_DELTA = 120.0d;
     private final static DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss.SSSSSS");
 
     final AtomicInteger startCount;
@@ -32,6 +32,7 @@ public class TimeMachine
     /**
      * Create a time machine based on Java 8 style times
      * @param startTime the time of day that we want the time machine to begin the simulation from
+     * @param delta the rate at which the simulation clock advances relative to real time
      */
     public TimeMachine(final LocalTime startTime, final double delta)
     {
@@ -50,6 +51,10 @@ public class TimeMachine
         this.delta = delta;
         this.startCount = new AtomicInteger(0);
         this.zoneOffset = startTime.getOffset();
+        if (delta > HIGH_DELTA) {
+            // TODO: Figure out what the true highest value for delta is (based on some overflow analysis)
+            LOG.error("High values of delta (" + delta + ") will cause the time machine to behave erratically, try setting to below " + HIGH_DELTA);
+        }
     }
 
     /**
@@ -60,6 +65,8 @@ public class TimeMachine
         this(LocalTime.of(0, 0, 0), 0.0d);
         start();
     }
+
+    public double getDelta() { return delta; }
 
     public void start()
     {

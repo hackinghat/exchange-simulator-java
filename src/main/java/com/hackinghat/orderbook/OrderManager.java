@@ -38,7 +38,7 @@ import static com.hackinghat.util.Formatters.QUANTITY_FORMAT;
 public class OrderManager extends AbstractComponent implements Runnable, Listener
 {
     private static final Logger LOG = LogManager.getLogger(OrderManager.class);
-    private static AtomicLong ID = new AtomicLong();
+    private static final AtomicLong ID = new AtomicLong();
 
     private final Object                          sync        = new Object();
     private final AtomicLong                      counter     = new AtomicLong();
@@ -57,11 +57,10 @@ public class OrderManager extends AbstractComponent implements Runnable, Listene
     private final OrderManagerState               orderManagerState;
     private final Duration                        marketDataDelay;
     private final MarketManager                   marketManager;
+    private final SimulatorObjectMapper           mapper;
+    private final EventPublisherComponent<String, Trade> tapePublisher;
     private       CachedValue<Level1>             level1;
     private       Level                           referencePrice;
-    private       SimulatorObjectMapper           mapper;
-
-    private       EventPublisherComponent<String, Trade> tapePublisher;
     public OrderManager(final MarketManager marketManager, TimeMachine timeMachine, final Level referencePrice, final MarketState initialState, final Instrument instrument, final EventDispatcher eventDispatcher, final AbstractStatisticsAppender tape, final AbstractStatisticsAppender orderAppender, final Duration marketDataDelay)
     {
         super("OrderManager-" + instrument.getTicker());
@@ -88,7 +87,7 @@ public class OrderManager extends AbstractComponent implements Runnable, Listene
         this.marketDataDelay = marketDataDelay;
         this.referencePrice = referencePrice;
         this.mapper = new SimulatorObjectMapper(SimulatorObjectMapperAudience.PUBLIC, timeMachine);
-        this.tapePublisher = require(new EventPublisherComponent<String, Trade>("EP-Trade", mapper, new StringSerializer(), new KafkaTradeSerializer(), (t) -> "OrderLimit.VOD.trade"));
+        this.tapePublisher = require(new EventPublisherComponent<>("EP-Trade", mapper, new StringSerializer(), new KafkaTradeSerializer(mapper), (t) -> "VOD.TRADE"));
     }
 
     @MBeanAttribute(description = "Current state of the market")
@@ -549,7 +548,7 @@ public class OrderManager extends AbstractComponent implements Runnable, Listene
 
     public void process()
     {
-        processEvents(pendingItems(eventQueue, 0));
+        processEvents(pendingItems(eventQueue, Double.valueOf(1.0d/timeMachine.getDelta()).longValue()));
     }
 
     public void preProcess()

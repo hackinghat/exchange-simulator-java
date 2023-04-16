@@ -15,7 +15,7 @@ import java.util.Properties;
 public class KafkaConsumerExample {
     private final static String TOPIC = "xyz";
     private final static String BOOTSTRAP_SERVERS =
-        "localhost:9092,localhost:9093,localhost:9094";
+        "localhost:9092";
 
     private static Consumer<Long, String> createConsumer() {
         final Properties props = new Properties();

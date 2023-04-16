@@ -246,7 +246,7 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
         // Prepare the auction schedule items and actually schedule them
         marketManager.start();
 
-        // Now begin the directly managed threads, TODO: these should probably be in a scheduled executor of some sort
+        // Now begin the directly managed threads, TODO: these should probably be in an executor of some sort
         managerThread = new Thread(manager);
         managerThread.start();
         appenderThread = new Thread(orderStatsAppender);
@@ -266,7 +266,7 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
     public static void main(String[] args) {
         final Instrument VOD = new Instrument("VOD", "Vodafone Plc", new Currency("GBP"), new ConstantTickSizeToLevelConverter(2, 100, 3));
         final RandomSource randomSource = new RandomSourceImpl(2L);
-        final TimeMachine timeMachine = new TimeMachine(LocalTime.of(7, 54, 0), 1000.0);
+        final TimeMachine timeMachine = new TimeMachine(LocalTime.of(7, 54, 0), 60.0);
         final ScheduledExecutorService dispatcherScheduler = new ScheduledThreadPoolExecutor(N_DISPATCHERS);
         final EventDispatcher dispatcher = new AsyncEventDispatcher(dispatcherScheduler, timeMachine);
         final Level referenceLevel = VOD.getLevel(100.0);

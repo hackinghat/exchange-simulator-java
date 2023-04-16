@@ -51,7 +51,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
+      <artifactId>log4j-core</artifactId>k]
       <version>2.17.1</version>
     </dependency>
     <!-- Events -->

@@ -12,7 +12,7 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 public class KafkaConfigBuilder {
-    public final static String BOOTSTRAP_SERVERS = "exsim:9092";
+    public final static String BOOTSTRAP_SERVERS = "localhost:9092";
 
     public static Properties makeConfig(final String bootstrapServer) {
         //Assign topicName to string variable
