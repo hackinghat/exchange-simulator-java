@@ -67,6 +67,7 @@ public class TimeMachine
     }
 
     public double getDelta() { return delta; }
+    public long defaultWaitMillis() { return delta == 0.0f ? 0L : Double.valueOf(1.d/delta).longValue(); }
 
     public void start()
     {

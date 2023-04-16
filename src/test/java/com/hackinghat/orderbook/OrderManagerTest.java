@@ -445,9 +445,9 @@ public class OrderManagerTest
             AuctionState state = testHelper.makeState1();
             assertEquals(0, tape.size());
             auction.uncross();
-            assertEquals(state.getUncrossingInterest().getSecond(), getPrintedVolume());
             // The executions should occur in priority order so the prints are predictable
             checkTape(2500, 6900, 600, 400);
+            assertEquals(state.getUncrossingInterest().getSecond(), getPrintedVolume());
             // At the end of the auction we should be left with the following interest at the auction price
             checkInterest(auction, LLOY.getLevel(104.5), 5200, 0);
         }
@@ -479,7 +479,7 @@ public class OrderManagerTest
     {
         final Instrument LLOY  = new Instrument("LLOY.L", new Currency("GBP"), new ConstantTickSizeToLevelConverter(1, 100, 3));
         final Level referenceLevel = LLOY.getLevel(100.0);
-        try (final OrderManager auction = new OrderManager(marketManager, timeMachine, referenceLevel, MarketState.CONTINUOUS, LLOY, new SyncEventDispatcher(timeMachine), tape, null, Duration.ZERO)) {
+        try (final OrderManager auction = new OrderManager(marketManager, timeMachine, referenceLevel, MarketState.CONTINUOUS, LLOY, new SyncEventDispatcher(timeMachine), null, null, Duration.ZERO)) {
             final Order inFlight = submitMarket(nullAgent, OrderSide.BUY, auction, 500);
             auction.notify(new AuctionTriggerEvent(this, timeMachine.toSimulationTime(), EnumSet.of(MarketState.CONTINUOUS), MarketState.AUCTION, referenceLevel, Duration.ZERO));
             inFlight.setQuantity(1000);

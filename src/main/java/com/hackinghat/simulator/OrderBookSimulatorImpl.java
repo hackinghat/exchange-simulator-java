@@ -81,6 +81,7 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
     private final TimeMachine                 timeMachine;
     private final Instant                     startTime;
     private final ArrayList<MBeanHolder>      mbeans;
+    private final boolean                     publish;
 
     /**
      * Create a new simulator
@@ -90,8 +91,9 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
      * @param randomSource
      * @param timeMachine
      */
-    public OrderBookSimulatorImpl(final Instrument instrument, final MarketManager marketManager, final EventDispatcher eventDispatcher, final RandomSource randomSource, final TimeMachine timeMachine, final Duration marketDataDelay) {
+    public OrderBookSimulatorImpl(final Instrument instrument, final MarketManager marketManager, final EventDispatcher eventDispatcher, final RandomSource randomSource, final TimeMachine timeMachine, final Duration marketDataDelay, final boolean publish) {
         super("OrderBookSimulator");
+        this.publish = publish;
         this.mbeans = new ArrayList<>();
         this.appenderScheduler = new ScheduledThreadPoolExecutor(N_APPENDERS);
         this.instrument = instrument;
@@ -100,14 +102,18 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
         this.marketManager = require(marketManager);
         this.startTime = Instant.now();
         this.tape = new FileStatisticsAppender<Trade>(Trade::getStatisticNames, startTime, instrument.getTicker() + "-TRADE");
-        this.orderStatsAppender = new FileStatisticsAppender<Order>(Order::getStatisticNames, startTime, instrument.getTicker()+"-ORDER");
+        if (publish) {
+            this.orderStatsAppender = new FileStatisticsAppender<Order>(Order::getStatisticNames, startTime, instrument.getTicker() + "-ORDER");
+        } else {
+            this.orderStatsAppender = null;
+        }
         this.manager = require(new OrderManager(marketManager, timeMachine, instrument.getLevel(100.0), MarketState.CLOSED, instrument, eventDispatcher, tape, orderStatsAppender, marketDataDelay));
         this.agentBuilder = new AgentBuilder(instrument, randomSource, 100000.0, 1000, ALPHA, 4.5, 0.8);
         this.agentSet = new ArrayList<>();
     }
 
     public OrderBookSimulatorImpl(final Instrument instrument, final MarketManager marketManager, final EventDispatcher eventDispatcher, final RandomSource randomSource, final TimeMachine timeMachine) {
-        this(instrument, marketManager, eventDispatcher, randomSource, timeMachine, DEFAULT_MARKET_DATA_DELAY);
+        this(instrument, marketManager, eventDispatcher, randomSource, timeMachine, DEFAULT_MARKET_DATA_DELAY, true);
     }
 
     @Override

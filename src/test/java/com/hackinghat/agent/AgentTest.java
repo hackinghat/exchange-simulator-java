@@ -12,6 +12,7 @@ import com.hackinghat.order.OrderState;
 import com.hackinghat.util.RandomSource;
 import com.hackinghat.util.RandomSourceImpl;
 import com.hackinghat.util.TimeMachine;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +39,11 @@ public class AgentTest
         timeMachine.start();
         randomSource = new RandomSourceImpl(0L);
         instrument = new Instrument("VOD", new Currency("GBP"), new ConstantTickSizeToLevelConverter(1, 100, 3));
+    }
+
+    @After
+    public void tearDown() {
+
     }
 
 

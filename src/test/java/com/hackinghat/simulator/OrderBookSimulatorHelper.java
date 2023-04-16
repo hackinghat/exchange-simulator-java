@@ -115,7 +115,7 @@ public class OrderBookSimulatorHelper extends AbstractComponent
         auctionEventReceiver = new AuctionEventReceiver(eventDispatcher);
         marketManager = require(new MarketManager(referenceLevel, 0.1, Duration.of(5L, ChronoUnit.MINUTES), timeMachine, eventDispatcher, auctionSchedule));
         marketManager.start();
-        simulator = require(new OrderBookSimulatorImpl(inst, marketManager, eventDispatcher, randomSource, timeMachine, Duration.ZERO));
+        simulator = require(new OrderBookSimulatorImpl(inst, marketManager, eventDispatcher, randomSource, timeMachine, Duration.ZERO, false));
         testAgent = require(new NullAgent(0L, inst, randomSource, timeMachine, "A1", eventDispatcher));
     }
 

@@ -87,7 +87,12 @@ public class OrderManager extends AbstractComponent implements Runnable, Listene
         this.marketDataDelay = marketDataDelay;
         this.referencePrice = referencePrice;
         this.mapper = new SimulatorObjectMapper(SimulatorObjectMapperAudience.PUBLIC, timeMachine);
-        this.tapePublisher = require(new EventPublisherComponent<>("EP-Trade", mapper, new StringSerializer(), new KafkaTradeSerializer(mapper), (t) -> "VOD.TRADE"));
+        // If we're not appending orders to a log then let's not publish anything  either (because we're in test)
+        if (orderAppender != null) {
+            this.tapePublisher = require(new EventPublisherComponent<>("EP-Trade", mapper, new StringSerializer(), new KafkaTradeSerializer(mapper), (t) -> "VOD.TRADE"));
+        } else {
+            this.tapePublisher = null;
+        }
     }
 
     @MBeanAttribute(description = "Current state of the market")
@@ -279,9 +284,11 @@ public class OrderManager extends AbstractComponent implements Runnable, Listene
             }
         }
         eventDispatcher.dispatch(last);
-        // TODO: StatisticsAppenders should be listeners?
+        // TODO: If there's no order appender we're testing (ideally should be mocked)
         tape.append(timeMachine, last);
-        tapePublisher.publish(timeMachine, last);
+        if (orderAppender != null) {
+            tapePublisher.publish(timeMachine, last);
+        }
         referencePrice = executionLevel;
     }
 
@@ -548,7 +555,7 @@ public class OrderManager extends AbstractComponent implements Runnable, Listene
 
     public void process()
     {
-        processEvents(pendingItems(eventQueue, Double.valueOf(1.0d/timeMachine.getDelta()).longValue()));
+        processEvents(pendingItems(eventQueue, timeMachine.defaultWaitMillis()));
     }
 
     public void preProcess()
