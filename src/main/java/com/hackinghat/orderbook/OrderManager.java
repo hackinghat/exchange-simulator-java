@@ -16,6 +16,7 @@ import com.hackinghat.orderbook.auction.MarketManager;
 import com.hackinghat.util.*;
 import com.hackinghat.util.component.AbstractComponent;
 import com.hackinghat.util.mbean.MBeanAttribute;
+import com.hackinghat.util.mbean.MBeanOperation;
 import com.hackinghat.util.mbean.MBeanType;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -162,9 +163,10 @@ public class OrderManager extends AbstractComponent implements Runnable, Listene
         return side == OrderSide.BUY ? offerBook : bidBook;
     }
 
-    public void terminate()
-    {
+    @MBeanOperation(description = "OrderManager:terminate")
+    public void terminate() {
         terminate.set(true);
+        LOG.debug(getName() + " termination requested.");
     }
 
     boolean isTerminate()
@@ -598,13 +600,11 @@ public class OrderManager extends AbstractComponent implements Runnable, Listene
             }
             eventDispatcher.removeListener(AuctionTriggerEvent.class, this);
         }
-        catch (final Exception ex)
-        {
+        catch (final Exception ex)  {
             LOG.error("Encountered an irrecoverable order manager error: ", ex);
             //LOG.error("HISTORY: " + System.lineSeparator() + orderHistory);
         }
-        finally
-        {
+        finally {
             terminate.set(true);
         }
     }

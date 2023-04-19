@@ -24,6 +24,8 @@ import com.hackinghat.util.mbean.MBeanType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -38,7 +40,6 @@ import static com.hackinghat.agent.parameter.AgentParameterSet.P_INSPREAD;
 public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBookSimulator
 {
     private static final Logger LOG = LogManager.getLogger(OrderBookSimulatorImpl.class);
-
     // The probability that the next action will be a cancel
     private static       double P_CANCEL   = 0.5;
     // The probability that the next action will be a market order
@@ -68,13 +69,11 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
 
     private final Instrument                  instrument;
     private final OrderManager                manager;
-    private Thread                            managerThread;
-    private Thread                            appenderThread;
-    private Thread                            tapeThread;
     private final MarketManager               marketManager;
     private final AgentBuilder                agentBuilder;
     private final EventDispatcher             eventDispatcher;
-    private final ScheduledExecutorService    appenderScheduler;
+    private final ScheduledExecutorService    scheduler;
+    private final ExecutorService             cachedThreadPool;
     private final Collection<Agent>           agentSet;
     private final AbstractStatisticsAppender  orderStatsAppender;
     private final AbstractStatisticsAppender  tape;
@@ -82,20 +81,26 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
     private final Instant                     startTime;
     private final ArrayList<MBeanHolder>      mbeans;
     private final boolean                     publish;
+    private       Future<?>                   managerFuture;
+    private       AbstractStatisticsAppender  agentStatisticAppender;
+    private       AbstractStatisticsAppender  agentDescription;
 
     /**
      * Create a new simulator
      * @param instrument the instrument we are running the market simulation for
-     * @param marketManager
-     * @param eventDispatcher
-     * @param randomSource
-     * @param timeMachine
+     * @param marketManager the manager responsible for running auctions
+     * @param eventDispatcher event propagation dispatcher
+     * @param randomSource source of randomness (or non-randomness for tests)
+     * @param timeMachine a converter of wall-clock time to simulation time
      */
-    public OrderBookSimulatorImpl(final Instrument instrument, final MarketManager marketManager, final EventDispatcher eventDispatcher, final RandomSource randomSource, final TimeMachine timeMachine, final Duration marketDataDelay, final boolean publish) {
+    public OrderBookSimulatorImpl(final Instrument instrument, final MarketManager marketManager, final EventDispatcher eventDispatcher, final RandomSource randomSource, final TimeMachine timeMachine, final Duration marketDataDelay, final ScheduledExecutorService scheduler,  boolean publish) {
         super("OrderBookSimulator");
+        Objects.requireNonNull(scheduler);
+
         this.publish = publish;
         this.mbeans = new ArrayList<>();
-        this.appenderScheduler = new ScheduledThreadPoolExecutor(N_APPENDERS);
+        this.cachedThreadPool = Executors.newCachedThreadPool();
+        this.scheduler = scheduler;
         this.instrument = instrument;
         this.timeMachine = timeMachine;
         this.eventDispatcher = require(eventDispatcher);
@@ -112,13 +117,29 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
         this.agentSet = new ArrayList<>();
     }
 
-    public OrderBookSimulatorImpl(final Instrument instrument, final MarketManager marketManager, final EventDispatcher eventDispatcher, final RandomSource randomSource, final TimeMachine timeMachine) {
-        this(instrument, marketManager, eventDispatcher, randomSource, timeMachine, DEFAULT_MARKET_DATA_DELAY, true);
+    public OrderBookSimulatorImpl(final Instrument instrument, final MarketManager marketManager, final EventDispatcher eventDispatcher, final RandomSource randomSource, final TimeMachine timeMachine, final ScheduledExecutorService scheduler) {
+        this(instrument, marketManager, eventDispatcher, randomSource, timeMachine, DEFAULT_MARKET_DATA_DELAY, scheduler, true);
     }
 
     @Override
     public void close() {
         super.close();
+        cachedThreadPool.shutdownNow();
+        try {
+            cachedThreadPool.awaitTermination(10000L, TimeUnit.MILLISECONDS);
+        } catch (final InterruptedException iex) {
+            LOG.error("Appender pool terminated", iex);
+        }
+        LOG.info("Appenders stopped");
+        for (Closeable c : Set.of(tape, orderStatsAppender, agentDescription, agentStatisticAppender)) {
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (final IOException e) {
+                    LOG.error("Couldn't close: " + c.getClass().getSimpleName(), e);
+                }
+            }
+        }
         manager.close();
     }
 
@@ -151,32 +172,8 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
     public FullDepth getFullDepth() { return manager.getFullDepth(); }
 
     @Override
-    public void shutdown()
-    {
+    public void shutdown() {
         super.shutdown();
-//        try
-//        {
-//            // Cancel all auction events
-//            marketManager.stop();
-//
-//            // Stop collection stats
-//            orderStatsAppender.terminate();
-//            tape.terminate();
-//
-//            // Stop the order manager
-//            manager.terminate();
-//
-//            appenderThread.join();
-//            managerThread.join();
-//            tapeThread.join();
-//
-//            appenderScheduler.shutdownNow();
-//            appenderScheduler.awaitTermination(10000L, TimeUnit.MILLISECONDS);
-//        }
-//        catch (InterruptedException ignored)
-//        {
-//
-//        }
     }
 
     private void agentSummary() {
@@ -187,7 +184,7 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
     }
 
     public void process() {
-        if (managerThread != null)
+        if (managerFuture != null)
             throw new IllegalArgumentException("Can't call process when manager thread is running");
         manager.process();
     }
@@ -227,19 +224,19 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
         mmAgent.run();
         agentSet.add(mmAgent);
         final AgentStatistic agentStatistic = new AgentStatistic(timeMachine, agentSet);
-        final SamplingStatisticAppender<Collection<Agent>, AgentStatistic> agentStatisticAppender = new SamplingStatisticAppender<>(timeMachine, startTime, agentStatistic, () -> agentSet, agentStatistic::getHeaders, "AGENT");
-
-        appenderScheduler.scheduleWithFixedDelay(agentStatisticAppender, 0, timeMachine.simulationPeriodToWall(Duration.of(1, ChronoUnit.MINUTES), ChronoUnit.NANOS), TimeUnit.NANOSECONDS);
-        try (final FileStatisticsAppender<Agent> agentDescription = new FileStatisticsAppender<>(ZeroIntelligenceAgent::getHeaders, startTime, "AGENT-ZERO")) {
+        agentStatisticAppender = new SamplingStatisticAppender<>(timeMachine, startTime, agentStatistic, () -> agentSet, agentStatistic::getHeaders, "AGENT");
+        scheduler.scheduleWithFixedDelay(agentStatisticAppender, 0, timeMachine.simulationPeriodToWall(Duration.of(1, ChronoUnit.MINUTES), ChronoUnit.NANOS), TimeUnit.NANOSECONDS);
+        agentDescription = new FileStatisticsAppender<>(ZeroIntelligenceAgent::getHeaders, startTime, "AGENT-ZERO");
+        scheduler.scheduleWithFixedDelay(() -> {
             agentSet.forEach(a -> {
                 if (a instanceof ZeroIntelligenceAgent)
                     agentDescription.append(timeMachine, a);
             });
             agentDescription.run();
-        }
+        }, 0, timeMachine.simulationPeriodToWall(Duration.of(1, ChronoUnit.MINUTES), ChronoUnit.NANOS), TimeUnit.NANOSECONDS);
     }
 
-    private void start(final RandomSource randomSource) throws InterruptedException
+    private Future<?> start(final RandomSource randomSource) throws InterruptedException
     {
         Objects.requireNonNull(startTime);
 
@@ -252,47 +249,40 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
         // Prepare the auction schedule items and actually schedule them
         marketManager.start();
 
-        // Now begin the directly managed threads, TODO: these should probably be in an executor of some sort
-        managerThread = new Thread(manager);
-        managerThread.start();
-        appenderThread = new Thread(orderStatsAppender);
-        appenderThread.start();
-        tapeThread = new Thread(tape);
-        tapeThread.start();
+        // Now begin the directly managed threads
+        managerFuture = cachedThreadPool.submit(manager);
+        cachedThreadPool.execute(orderStatsAppender);
+        cachedThreadPool.execute(tape);
 
         final long durationOneSecond = timeMachine.simulationPeriodToWall(Duration.of(1L, ChronoUnit.SECONDS), ChronoUnit.NANOS);
         final OrderBookStatistic orderBookStatistic = new OrderBookStatistic(10, 10);
         final SamplingStatisticAppender<Pair<Level1, FullDepth>, OrderBookStatistic> samplingStatisticAppender = new SamplingStatisticAppender<>(timeMachine, startTime, orderBookStatistic,
             () -> Pair.instanceOf(manager.getLevel1(), manager.getFullDepth()), orderBookStatistic::getHeaders, "SAMPLE");
-        appenderScheduler.scheduleWithFixedDelay(samplingStatisticAppender, durationOneSecond, durationOneSecond, TimeUnit.NANOSECONDS);
+        scheduler.scheduleWithFixedDelay(samplingStatisticAppender, durationOneSecond, durationOneSecond, TimeUnit.NANOSECONDS);
         configureAgents(randomSource);
-        managerThread.join();
+        return managerFuture;
     }
 
     public static void main(String[] args) {
         final Instrument VOD = new Instrument("VOD", "Vodafone Plc", new Currency("GBP"), new ConstantTickSizeToLevelConverter(2, 100, 3));
         final RandomSource randomSource = new RandomSourceImpl(2L);
         final TimeMachine timeMachine = new TimeMachine(LocalTime.of(7, 54, 0), 60.0);
-        final ScheduledExecutorService dispatcherScheduler = new ScheduledThreadPoolExecutor(N_DISPATCHERS);
+        final ScheduledExecutorService dispatcherScheduler = Executors.newScheduledThreadPool(N_DISPATCHERS);
         final EventDispatcher dispatcher = new AsyncEventDispatcher(dispatcherScheduler, timeMachine);
         final Level referenceLevel = VOD.getLevel(100.0);
         final MarketManager marketManager = new MarketManager(referenceLevel, 0.1, Duration.of(5L, ChronoUnit.MINUTES), timeMachine, dispatcher, AuctionSchedule.makeLSESchedule(LocalDate.now()));
-        final OrderBookSimulatorImpl orderBookSimulator = new OrderBookSimulatorImpl(VOD, marketManager, dispatcher, randomSource, timeMachine);
-        try {
-            orderBookSimulator.start(randomSource);
+        try(OrderBookSimulatorImpl orderBookSimulator = new OrderBookSimulatorImpl(VOD, marketManager, dispatcher, randomSource, timeMachine, dispatcherScheduler)) {
+            orderBookSimulator.start(randomSource).get();
             LOG.info("Shutting down");
-
             dispatcherScheduler.shutdownNow();
             dispatcherScheduler.awaitTermination(10000, TimeUnit.MILLISECONDS);
             orderBookSimulator.agentSummary();
+            orderBookSimulator.shutdown();
         }
         catch (InterruptedException ignored) {
         }
         catch (Exception e) {
             LOG.error("Unexpected problem running simulator", e);
-        }
-        finally {
-            orderBookSimulator.shutdown();
         }
     }
 }

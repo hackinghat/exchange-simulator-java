@@ -51,6 +51,7 @@ public class KafkaEventsAppender<T extends Statistic, V> extends AbstractStatist
     @Override
     public void close()
     {
+        super.close();
         try
         {
             producer.close();

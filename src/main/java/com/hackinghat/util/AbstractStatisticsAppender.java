@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public abstract class AbstractStatisticsAppender implements Runnable, Closeable {
@@ -18,7 +19,7 @@ public abstract class AbstractStatisticsAppender implements Runnable, Closeable 
     private final static long DEFAULT_POLL_TIME = 10000L;
 
     private final LinkedBlockingQueue<String> statsQueue;
-    private boolean terminate;
+    private AtomicBoolean terminate;
 
     public static String defaultObjectArrayFormatter(final Object[] item) {
         final String[] result = new String[item.length];
@@ -31,7 +32,7 @@ public abstract class AbstractStatisticsAppender implements Runnable, Closeable 
 
     public AbstractStatisticsAppender() {
         this.statsQueue = new LinkedBlockingQueue<>();
-        this.terminate = false;
+        this.terminate = new AtomicBoolean(false);
         this.LOG =  LogManager.getLogger(getClass().getSimpleName());
     }
 
@@ -57,14 +58,16 @@ public abstract class AbstractStatisticsAppender implements Runnable, Closeable 
 
     public void terminate()
     {
-        terminate = true;
+        terminate.set(true);
     }
 
     protected abstract void process(final Collection<String> lines);
 
     @Override
-    public abstract void close();
-
+    public void close() {
+        terminate();
+    }
+    
     void writePending() {
         try {
             List<String> itemsToAppend = new ArrayList<>();
@@ -88,9 +91,7 @@ public abstract class AbstractStatisticsAppender implements Runnable, Closeable 
 
     public void run() {
         configure();
-        terminate = false;
-        while (!terminate)
-        {
+        while (!terminate.get()) {
             writePending();
         }
         close();

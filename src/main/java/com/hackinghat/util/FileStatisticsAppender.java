@@ -56,6 +56,7 @@ public class FileStatisticsAppender<T extends Statistic> extends AbstractStatist
 
     @Override
     public void close() {
+        super.close();
         try {
             writer.flush();
             writer.close();
