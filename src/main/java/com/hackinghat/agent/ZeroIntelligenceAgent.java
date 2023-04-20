@@ -196,13 +196,18 @@ public class ZeroIntelligenceAgent extends Agent
                 break;
             }
             case LIMIT: {
-                Integer quantity = nextVolume();
-                OrderSide side = nextSide();
+                final Integer quantity = nextVolume();
+                final OrderSide side = nextSide();
                 BigDecimal price;
                 String note = null;
                 if (MarketState.CONTINUOUS.equals(level1.getTouchState()))
                 {
-                    Pair<Level, String> calculatedPrice = nextPrice(side, level1);
+                    final Pair<Level, String> calculatedPrice = nextPrice(side, level1);
+                    // Should not reach here
+                    if (calculatedPrice == null) {
+                        LOG.error("No calculated price (" + level1 + ") but market is in continuous trading");
+                        break;
+                    }
                     price = calculatedPrice.getFirst().getPrice();
                     note = calculatedPrice.getSecond();
                 }

@@ -42,7 +42,7 @@ public class ConstantTickSizeToLevelConverter implements TickConverter
 
     @Override
     public Integer calculateLevelIndex(final BigDecimal price) {
-        BigDecimal bdp = price.divide(tickSize);
+        BigDecimal bdp = price.divide(tickSize, RoundingMode.HALF_EVEN);
         bdp = bdp.setScale(0, RoundingMode.HALF_EVEN);
         return bdp.intValue();
     }

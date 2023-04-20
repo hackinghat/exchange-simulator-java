@@ -80,7 +80,6 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
     private final TimeMachine                 timeMachine;
     private final Instant                     startTime;
     private final ArrayList<MBeanHolder>      mbeans;
-    private final boolean                     publish;
     private       Future<?>                   managerFuture;
     private       AbstractStatisticsAppender  agentStatisticAppender;
     private       AbstractStatisticsAppender  agentDescription;
@@ -95,9 +94,6 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
      */
     public OrderBookSimulatorImpl(final Instrument instrument, final MarketManager marketManager, final EventDispatcher eventDispatcher, final RandomSource randomSource, final TimeMachine timeMachine, final Duration marketDataDelay, final ScheduledExecutorService scheduler,  boolean publish) {
         super("OrderBookSimulator");
-        Objects.requireNonNull(scheduler);
-
-        this.publish = publish;
         this.mbeans = new ArrayList<>();
         this.cachedThreadPool = Executors.newCachedThreadPool();
         this.scheduler = scheduler;
@@ -126,7 +122,9 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
         super.close();
         cachedThreadPool.shutdownNow();
         try {
-            cachedThreadPool.awaitTermination(10000L, TimeUnit.MILLISECONDS);
+            if (!cachedThreadPool.awaitTermination(2L, TimeUnit.SECONDS)) {
+                LOG.warn("One of the order manager processes isn't shutting down cleanly timeout reached");
+            }
         } catch (final InterruptedException iex) {
             LOG.error("Appender pool terminated", iex);
         }
@@ -192,7 +190,7 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
     /**
      * The simulator shares its event dispatcher so that agents running in the same JVM don't also need a way of scheduling
      * their own tasks independently of the rest of the system.
-     * @return
+     * @return the simulator's event dispatcher
      */
     public EventDispatcher getEventDispatcher()
     {
@@ -213,6 +211,13 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
         );
     }
 
+    private void scheduleWithFixedDelay(final Runnable runnable, final long initialPeriod, final long repeatPeriod) {
+        Objects.requireNonNull(runnable);
+        if (scheduler != null) {
+            scheduler.scheduleWithFixedDelay(runnable, initialPeriod, repeatPeriod, TimeUnit.NANOSECONDS);
+        }
+
+    }
     public void configureAgents(final RandomSource randomSource) {
         final AgentParameterSet agentParameterSet = makeParameterSet(randomSource);
         for (final Agent za : agentBuilder.makeZeroIntelligenceAgents(timeMachine, agentParameterSet, "ZERO", N_AGENTS, Duration.of(MAX_SLEEP_TIME_T1, ChronoUnit.SECONDS), Duration.of(MAX_SLEEP_TIME_T2, ChronoUnit.SECONDS), this, P_CANCEL, P_MARKET, P_BUY)) {
@@ -225,15 +230,15 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
         agentSet.add(mmAgent);
         final AgentStatistic agentStatistic = new AgentStatistic(timeMachine, agentSet);
         agentStatisticAppender = new SamplingStatisticAppender<>(timeMachine, startTime, agentStatistic, () -> agentSet, agentStatistic::getHeaders, "AGENT");
-        scheduler.scheduleWithFixedDelay(agentStatisticAppender, 0, timeMachine.simulationPeriodToWall(Duration.of(1, ChronoUnit.MINUTES), ChronoUnit.NANOS), TimeUnit.NANOSECONDS);
+        scheduleWithFixedDelay(agentStatisticAppender, 0, timeMachine.simulationPeriodToWall(Duration.of(1, ChronoUnit.MINUTES), ChronoUnit.NANOS));
         agentDescription = new FileStatisticsAppender<>(ZeroIntelligenceAgent::getHeaders, startTime, "AGENT-ZERO");
-        scheduler.scheduleWithFixedDelay(() -> {
+        scheduleWithFixedDelay(() -> {
             agentSet.forEach(a -> {
                 if (a instanceof ZeroIntelligenceAgent)
                     agentDescription.append(timeMachine, a);
             });
             agentDescription.run();
-        }, 0, timeMachine.simulationPeriodToWall(Duration.of(1, ChronoUnit.MINUTES), ChronoUnit.NANOS), TimeUnit.NANOSECONDS);
+        }, 0, timeMachine.simulationPeriodToWall(Duration.of(1, ChronoUnit.MINUTES), ChronoUnit.NANOS));
     }
 
     private Future<?> start(final RandomSource randomSource) throws InterruptedException
@@ -258,7 +263,7 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
         final OrderBookStatistic orderBookStatistic = new OrderBookStatistic(10, 10);
         final SamplingStatisticAppender<Pair<Level1, FullDepth>, OrderBookStatistic> samplingStatisticAppender = new SamplingStatisticAppender<>(timeMachine, startTime, orderBookStatistic,
             () -> Pair.instanceOf(manager.getLevel1(), manager.getFullDepth()), orderBookStatistic::getHeaders, "SAMPLE");
-        scheduler.scheduleWithFixedDelay(samplingStatisticAppender, durationOneSecond, durationOneSecond, TimeUnit.NANOSECONDS);
+        scheduleWithFixedDelay(samplingStatisticAppender, durationOneSecond, durationOneSecond);
         configureAgents(randomSource);
         return managerFuture;
     }
@@ -275,7 +280,9 @@ public class OrderBookSimulatorImpl extends AbstractComponent implements OrderBo
             orderBookSimulator.start(randomSource).get();
             LOG.info("Shutting down");
             dispatcherScheduler.shutdownNow();
-            dispatcherScheduler.awaitTermination(10000, TimeUnit.MILLISECONDS);
+            if (!dispatcherScheduler.awaitTermination(10000, TimeUnit.MILLISECONDS)) {
+                LOG.warn("Scheduler didn't shutdown cleanly, timeout reached");
+            }
             orderBookSimulator.agentSummary();
             orderBookSimulator.shutdown();
         }

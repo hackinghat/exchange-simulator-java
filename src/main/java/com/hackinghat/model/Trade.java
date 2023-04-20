@@ -1,13 +1,11 @@
 package com.hackinghat.model;
 
 import com.hackinghat.statistic.Statistic;
-import com.hackinghat.util.CopyableAndIdentifiable;
 import com.hackinghat.util.Event;
 import com.hackinghat.util.Identifiable;
 import com.hackinghat.util.TimeMachine;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Objects;
 
 /** Immutable trade object event that is broadcast by the order manager on the successful matching

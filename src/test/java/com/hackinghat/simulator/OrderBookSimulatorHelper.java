@@ -48,16 +48,15 @@ public class OrderBookSimulatorHelper extends AbstractComponent
 
     public static Duration ONE_SECOND = Duration.of(1L, ChronoUnit.SECONDS);
 
-    private Instrument              inst;
-    private TimeMachine             timeMachine;
-    private NotSoRandomSource       randomSource;
-    private OrderBookSimulatorImpl simulator;
-    private Agent                   testAgent;
-    private Level                   referenceLevel;
-    private AuctionSchedule         auctionSchedule;
-    private SyncEventDispatcher     eventDispatcher;
-    private MarketManager           marketManager;
-    private AuctionEventReceiver    auctionEventReceiver;
+    private final Instrument              inst;
+    private final TimeMachine             timeMachine;
+    private final NotSoRandomSource       randomSource;
+    private final OrderBookSimulatorImpl  simulator;
+    private final Agent                   testAgent;
+    private final Level                   referenceLevel;
+    private final AuctionSchedule         auctionSchedule;
+    private final SyncEventDispatcher     eventDispatcher;
+    private final AuctionEventReceiver    auctionEventReceiver;
 
     private static int              clientId = 0;
 
@@ -77,30 +76,6 @@ public class OrderBookSimulatorHelper extends AbstractComponent
         return simulator;
     }
 
-    public Agent getTestAgent() {
-        return testAgent;
-    }
-
-    public Level getReferenceLevel() {
-        return referenceLevel;
-    }
-
-    public AuctionSchedule getAuctionSchedule() {
-        return auctionSchedule;
-    }
-
-    public SyncEventDispatcher getEventDispatcher() {
-        return eventDispatcher;
-    }
-
-    public MarketManager getMarketManager() {
-        return marketManager;
-    }
-
-    public AuctionEventReceiver getAuctionEventReceiver() {
-        return auctionEventReceiver;
-    }
-
     public OrderBookSimulatorHelper()
     {
         super("OrderBookSimulatorHelper");
@@ -113,9 +88,9 @@ public class OrderBookSimulatorHelper extends AbstractComponent
         eventDispatcher = require(new SyncEventDispatcher(timeMachine));
         auctionSchedule = AuctionSchedule.makeLSESchedule(LocalDate.now());
         auctionEventReceiver = new AuctionEventReceiver(eventDispatcher);
-        marketManager = require(new MarketManager(referenceLevel, 0.1, Duration.of(5L, ChronoUnit.MINUTES), timeMachine, eventDispatcher, auctionSchedule));
+        MarketManager marketManager = require(new MarketManager(referenceLevel, 0.1, Duration.of(5L, ChronoUnit.MINUTES), timeMachine, eventDispatcher, auctionSchedule));
         marketManager.start();
-        simulator = require(new OrderBookSimulatorImpl(inst, marketManager, eventDispatcher, randomSource, timeMachine, Duration.ZERO, false));
+        simulator = require(new OrderBookSimulatorImpl(inst, marketManager, eventDispatcher, randomSource, timeMachine, Duration.ZERO, null, false));
         testAgent = require(new NullAgent(0L, inst, randomSource, timeMachine, "A1", eventDispatcher));
     }
 
@@ -163,7 +138,7 @@ public class OrderBookSimulatorHelper extends AbstractComponent
 
     /**
      * Cancel the given orders so long as they are still known to the agent
-     * @param orders
+     * @param orders the orders to cancel
      */
     public void cancelOrders(final Collection<Order> orders) {
         for (final Order order : orders) {
@@ -189,21 +164,6 @@ public class OrderBookSimulatorHelper extends AbstractComponent
     public void resetRandomSource()
     {
         randomSource.reset();
-    }
-
-    public void add(final Order... orders)
-    {
-        simulator.add(orders);
-    }
-
-    public void process()
-    {
-        simulator.process();
-    }
-
-    public int numPending()
-    {
-        return simulator.sizePending();
     }
 
     public void transitionClosedToAuction() throws Exception

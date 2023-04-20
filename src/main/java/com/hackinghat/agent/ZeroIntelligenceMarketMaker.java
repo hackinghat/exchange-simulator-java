@@ -50,12 +50,12 @@ public class ZeroIntelligenceMarketMaker extends Agent
     Order getOffer() { return offer; }
 
     /**
-     *
-     * @param id
-     * @param instrument
-     * @param randomSource
-     * @param timeMachine
-     * @param evaluateOrders
+     * Zero intelligence market maker.
+     * @param id of the market maker
+     * @param instrument the instrument they are market making on
+     * @param randomSource for generating behaviour
+     * @param timeMachine to convert wall-clock time to simulation time
+     * @param evaluateOrders duration
      * @param name a name for this agent that we can use to trace its activity
      * @param simulator a referene to the order simulator
      * @param spreadLevels the number of ticks between the market maker's bid & offer
@@ -117,9 +117,9 @@ public class ZeroIntelligenceMarketMaker extends Agent
 
     /**
      * Given information for the side
-     * @param side
-     * @param currentOrder
-     * @param currentQuantity
+     * @param side the side to assess
+     * @param currentOrder for this market maker
+     * @param currentQuantity of the quote
      * @return either a zero length order array, a single order ()
      */
     private Collection<Order> calculateOrderActions(final Level1 level1, final OrderSide side, final Order currentOrder, final int currentQuantity)

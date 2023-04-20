@@ -56,8 +56,7 @@ public abstract class AbstractStatisticsAppender implements Runnable, Closeable 
 
     public long size() { return statsQueue.size(); }
 
-    public void terminate()
-    {
+    public void terminate() {
         terminate.set(true);
     }
 
@@ -94,7 +93,5 @@ public abstract class AbstractStatisticsAppender implements Runnable, Closeable 
         while (!terminate.get()) {
             writePending();
         }
-        close();
     }
-
 }
