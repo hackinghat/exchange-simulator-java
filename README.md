@@ -1,8 +1,8 @@
 
+
 # Exchange Simulator
 
-Description
------------
+## Description
 
 An equity exchange simulator that provides the following features:
 
@@ -11,8 +11,7 @@ An equity exchange simulator that provides the following features:
 * Statistics monitoring
 * Auction management (timed & monitoring)
 
-Why?
-----
+## Why?
 
 After spending a few years working on a systematic trading engine I wanted to dig deeper into the behaviour of limit 
 order books of lit markets.  The behaviour we were trying to profit from seemed largely random to me.  Trying to read
@@ -26,8 +25,7 @@ on.
 The intention, once written was to see if there is a way to derive a real trading strategy from this.  I suspect there
 is but I leave that as an exercise for the reader :smiley:.
 
-Getting Started
----------------
+## Getting Started
 
 ### Building the application
 
@@ -63,8 +61,29 @@ interesting thing to do which you can do by changing the `ZeroIntelligenceAgent`
 If you know how to use [VisualVM](https://visualvm.github.io/) there are also some live settable config exposed by 
 JMXBeans.
 
-History
--------
+## Analysis and future work
+
+The main purpose of this software is to be able to do research on trading venues by having complete control over a toy 
+one.  The first thing to verify with the exchange simulator is that it actually behaves like a real venue.  You can see 
+some visual inspection of the results [here](https://github.com/hackinghat/exchange-simulator-java/blob/main/docs/Output%20Analysis.ipynb)
+
+If you have [Jupyter](https://jupyter.org/) installed you can re-run the notebook on your own outputs.
+
+### Future
+
+I want to do some more work to verify the correctness of the simulator but I'd also like to try some 
+other things that seem interesting:
+
+* **Tick sizes** Following MiFID2 most European exchanges have a tick size regime which changes the tick
+size based on the turnover over of the stock.  The boundaries are arbitrary numbers so given a pre-canned order flow
+(but with un-rounded ticks!) how does the price evolve with different tick sizes.
+* **Telemetry** I'd like this to be as high performance as possible (currently the simulator has some perceived 
+performance issues).  So some throughput telemetry.
+* **Bad agents** Currently all the participants on the exchange are noise traders.  What if we inject a quote-stuffing, 
+layering bad actor into the noise.  What's the minimum of bad behaviour that creates a favourable outcome for the actor?
+Could the agent detect and suppress the bad actor without any prior knowledge of who it is? 
+
+## History
 
 The ExchangeSimulator is based on the following  references.   
 
