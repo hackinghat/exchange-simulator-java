@@ -2,15 +2,13 @@ package com.hackinghat.agent.parameter;
 
 import com.hackinghat.util.RandomSource;
 
-public class UniformAgentParameter<ParameterType extends Number> extends AgentParameter<ParameterType>
-{
-    private final Class<ParameterType>  parameterTypeClass;
-    private final RandomSource          randomSource;
-    private final ParameterType         min;
-    private final ParameterType         diff;
+public class UniformAgentParameter<ParameterType extends Number> extends AgentParameter<ParameterType> {
+    private final Class<ParameterType> parameterTypeClass;
+    private final RandomSource randomSource;
+    private final ParameterType min;
+    private final ParameterType diff;
 
-    public UniformAgentParameter(final String name, final Class<ParameterType> parameterTypeClass, final RandomSource randomSource, final ParameterType min, final ParameterType max)
-    {
+    public UniformAgentParameter(final String name, final Class<ParameterType> parameterTypeClass, final RandomSource randomSource, final ParameterType min, final ParameterType max) {
         super(name);
         this.randomSource = randomSource;
         this.parameterTypeClass = parameterTypeClass;

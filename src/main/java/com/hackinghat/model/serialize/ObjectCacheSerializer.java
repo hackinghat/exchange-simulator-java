@@ -11,16 +11,19 @@ import java.util.*;
 
 public class ObjectCacheSerializer extends StdSerializer<ObjectCache> {
 
-    public static String jsonNameForClass(final Class<?> clazz) { return clazz.getSimpleName().toLowerCase(Locale.ROOT); }
-
     public ObjectCacheSerializer() {
         super(ObjectCache.class);
     }
 
+    public static String jsonNameForClass(final Class<?> clazz) {
+        return clazz.getSimpleName().toLowerCase(Locale.ROOT);
+    }
+
     /**
      * We need to make the ordering of the output predictable
-     * @param objectCache
-     * @return
+     *
+     * @param objectCache the cache to inspect
+     * @return a sorted list of names
      */
     private Collection<Class<CopyableAndIdentifiable<Object>>> getCacheNames(final ObjectCache objectCache) {
         final Map<Class<CopyableAndIdentifiable<Object>>, Long> caches = objectCache.getSizes();

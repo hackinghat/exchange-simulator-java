@@ -10,22 +10,17 @@ import com.hackinghat.util.mbean.MBeanType;
 import java.time.Duration;
 
 @MBeanType(description = "Agent Impl Test")
-public class AgentImplTest extends Agent
-{
-    public AgentImplTest(final Instrument instrument, final RandomSource randomSource, Long id)
-    {
+public class AgentImplTest extends Agent {
+    public AgentImplTest(final Instrument instrument, final RandomSource randomSource, Long id) {
         super(id, instrument, randomSource, new TimeMachine(), "TestAgent #" + id, null, false);
     }
 
-    public AgentImplTest(final Instrument instrument, final Long id)
-    {
+    public AgentImplTest(final Instrument instrument, final Long id) {
         this(instrument, new RandomSourceImpl(0L), id);
     }
 
-    public Order getOrder(final String clientId)
-    {
-        for (Order order : getOutstandingOrders())
-        {
+    public Order getOrder(final String clientId) {
+        for (Order order : getOutstandingOrders()) {
             if (order.getClientId().equals(clientId))
                 return order;
         }

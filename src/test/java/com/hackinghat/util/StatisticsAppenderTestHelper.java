@@ -6,10 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-public class StatisticsAppenderTestHelper extends AbstractStatisticsAppender
-{
-    private ArrayList<String>         lines;
-    private ArrayList<Statistic>      sourceData;
+public class StatisticsAppenderTestHelper extends AbstractStatisticsAppender {
+    private final ArrayList<String> lines;
+    private final ArrayList<Statistic> sourceData;
 
     public StatisticsAppenderTestHelper() {
         lines = new ArrayList<>();
@@ -17,11 +16,11 @@ public class StatisticsAppenderTestHelper extends AbstractStatisticsAppender
     }
 
     @Override
-    public void configure() { }
+    public void configure() {
+    }
 
     @Override
-    protected void process(Collection<String> lines)
-    {
+    protected void process(Collection<String> lines) {
         this.lines.addAll(lines);
     }
 
@@ -31,8 +30,7 @@ public class StatisticsAppenderTestHelper extends AbstractStatisticsAppender
         sourceData.addAll(Arrays.asList(statistics));
     }
 
-    public Collection<Statistic> getStatistics()
-    {
+    public Collection<Statistic> getStatistics() {
         return sourceData;
     }
 

@@ -17,6 +17,7 @@ public interface Component extends Nameable, AutoCloseable {
 
     @MBeanOperation(description = "Component:Stop")
     void stop();
+
     @MBeanOperation(description = "Component:Start")
     void suspend();
 
@@ -29,18 +30,26 @@ public interface Component extends Nameable, AutoCloseable {
 
     /**
      * Require the dependents for the correct running of this component
+     *
      * @param component a collection of dependencies for this component
      */
     <C extends AbstractComponent> C require(final C component);
+
     void unrequire(final Component component);
+
     Component[] getRequirementsOf();
-    Pair<Component, Component> hasCycle(final Function<Component, Component[]> componentProvider, final Set<Pair<Component,Component>> components);
+
+    Pair<Component, Component> hasCycle(final Function<Component, Component[]> componentProvider, final Set<Pair<Component, Component>> components);
 
 
     Component[] getReferences();
+
     void addReference(final Component component);
+
     boolean removeReference(final Component component);
 
-    default void close() { }
+    default void close() {
+    }
+
     boolean isClosed();
 }

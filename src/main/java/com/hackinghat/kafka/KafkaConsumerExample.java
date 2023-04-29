@@ -8,14 +8,13 @@ import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
 import java.time.Duration;
-import java.time.temporal.TemporalUnit;
 import java.util.Collections;
 import java.util.Properties;
 
 public class KafkaConsumerExample {
     private final static String TOPIC = "xyz";
     private final static String BOOTSTRAP_SERVERS =
-        "localhost:9092";
+            "localhost:9092";
 
     private static Consumer<Long, String> createConsumer() {
         final Properties props = new Properties();
@@ -40,12 +39,13 @@ public class KafkaConsumerExample {
     public static void main(String[] args) throws InterruptedException {
         final Consumer<Long, String> consumer = createConsumer();
 
-        final int giveUp = 100;   int noRecordsCount = 0;
+        final int giveUp = 100;
+        int noRecordsCount = 0;
 
         while (true) {
             final ConsumerRecords<Long, String> consumerRecords =
                     consumer.poll(Duration.ofMillis(1000L));
-            if (consumerRecords.count()==0) {
+            if (consumerRecords.count() == 0) {
                 noRecordsCount++;
                 if (noRecordsCount > giveUp) break;
                 else continue;

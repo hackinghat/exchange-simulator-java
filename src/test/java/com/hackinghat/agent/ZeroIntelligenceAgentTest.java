@@ -5,11 +5,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static com.hackinghat.simulator.OrderBookSimulatorHelper.ONE_SECOND;
 import static org.junit.Assert.assertEquals;
 
-import static com.hackinghat.simulator.OrderBookSimulatorHelper.ONE_SECOND;
-public class ZeroIntelligenceAgentTest
-{
+public class ZeroIntelligenceAgentTest {
     private OrderBookSimulatorHelper simulatorHelper;
 
     @Before
@@ -18,18 +17,19 @@ public class ZeroIntelligenceAgentTest
     }
 
     @After
-    public void teardown() { if (simulatorHelper != null) simulatorHelper.shutdown(); }
+    public void teardown() {
+        if (simulatorHelper != null) simulatorHelper.shutdown();
+    }
 
     @Test
-    public void testSharesAffordability()
-    {
-        simulatorHelper.setDoubleSource(new double[] {
+    public void testSharesAffordability() {
+        simulatorHelper.setDoubleSource(new double[]{
                 1.0,  // LIMIT
                 2.0,  // Quantity
                 1.0,  // SELL
                 0.0   // In-spread limit (<=0.5)
         });
-        simulatorHelper.setIntSource(new int[] {
+        simulatorHelper.setIntSource(new int[]{
                 2     // 2 levels towards bid
         });
         try (final ZeroIntelligenceAgent agent = new ZeroIntelligenceAgent(1L, simulatorHelper.getInst(), simulatorHelper.getRandomSource(), simulatorHelper.getTimeMachine(), ONE_SECOND, ONE_SECOND, "Z1", simulatorHelper.getSimulator(), 0.0, 0.0, 0.0, 0.5)) {
@@ -47,8 +47,7 @@ public class ZeroIntelligenceAgentTest
     }
 
     @Test
-    public void testAuctionProcessing() throws Exception
-    {
+    public void testAuctionProcessing() throws Exception {
         simulatorHelper.getRandomSource().setDoubleSource(new double[]{
                 0.5,        //LIMIT
                 50.0});     //Quantity

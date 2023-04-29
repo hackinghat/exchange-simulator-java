@@ -1,14 +1,11 @@
 package com.hackinghat.order;
 
-public enum OrderSide
-{
+public enum OrderSide {
     BUY,
     SELL;
 
-    public static OrderSide getOther(OrderSide side)
-    {
-        switch (side)
-        {
+    public static OrderSide getOther(OrderSide side) {
+        switch (side) {
             case BUY:
                 return SELL;
             case SELL:

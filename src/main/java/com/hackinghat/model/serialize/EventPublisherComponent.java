@@ -1,8 +1,6 @@
 package com.hackinghat.model.serialize;
 
 import com.hackinghat.kafka.KafkaConfigBuilder;
-import com.hackinghat.kafka.KafkaJsonSerializer;
-import com.hackinghat.util.CopyableAndIdentifiable;
 import com.hackinghat.util.Identifiable;
 import com.hackinghat.util.SimulatorObjectMapper;
 import com.hackinghat.util.TimeMachine;
@@ -19,10 +17,9 @@ import java.util.function.Function;
 @MBeanType(description = "A published of events")
 public class EventPublisherComponent<K, V extends Identifiable<K>> extends AbstractComponent implements EventPublisher<V> {
 
-    private Producer<K, V> producer;
     private final Function<V, String> topicDeriveFn;
     private final SimulatorObjectMapper mapper;
-
+    private Producer<K, V> producer;
     private int messagesSent;
 
     public EventPublisherComponent(final String name, final SimulatorObjectMapper mapper, final Serializer<K> keySerializer, final Serializer<V> valueSerializer, final Function<V, String> topicDeriveFn) {
@@ -34,7 +31,9 @@ public class EventPublisherComponent<K, V extends Identifiable<K>> extends Abstr
     }
 
     @MBeanAttribute(description = "Sent messages")
-    public int getSentMessages() { return messagesSent; }
+    public int getSentMessages() {
+        return messagesSent;
+    }
 
     @Override
     public void configure() {

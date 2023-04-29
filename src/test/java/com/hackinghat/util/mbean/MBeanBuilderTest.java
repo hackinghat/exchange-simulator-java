@@ -3,12 +3,6 @@ package com.hackinghat.util.mbean;
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectInstance;
-import java.lang.management.ManagementFactory;
-import java.lang.reflect.Constructor;
-import java.util.Date;
-
 public class MBeanBuilderTest {
     @Test(expected = IllegalArgumentException.class)
     public void testNullAttributeName() {

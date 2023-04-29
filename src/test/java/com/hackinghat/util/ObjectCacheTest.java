@@ -15,7 +15,7 @@ public class ObjectCacheTest {
         oc.addCache(new MemoryCache<>(RandomObject.class));
         oc.insert(new RandomObject("A", null));
         Assert.assertEquals(1, oc.getSizes().size());
-        Assert.assertEquals(1L, (long)oc.getSizes().get(RandomObject.class));
+        Assert.assertEquals(1L, (long) oc.getSizes().get(RandomObject.class));
     }
 
     @Test
@@ -26,7 +26,7 @@ public class ObjectCacheTest {
         Assert.assertThrows(IllegalArgumentException.class, () -> oc.update(new RandomObject("A", null)));
         oc.addCache(new MemoryCache<>(RandomObject.class));
         Assert.assertEquals(1, oc.getSizes().size());
-        Assert.assertEquals(0L, (long)oc.getSizes().get(RandomObject.class));
+        Assert.assertEquals(0L, (long) oc.getSizes().get(RandomObject.class));
         oc.insert(new RandomObject("A", 1L));
         Optional<RandomObject> opt = oc.get(RandomObject.class, "A");
         Assert.assertTrue(opt.isPresent());
@@ -46,7 +46,7 @@ public class ObjectCacheTest {
         Assert.assertFalse(oc.remove(RandomObject.class, "A"));
         oc.insert(new RandomObject("A", null));
         Assert.assertEquals(1, oc.getSizes().size());
-        Assert.assertEquals(1L, (long)oc.getSizes().get(RandomObject.class));
+        Assert.assertEquals(1L, (long) oc.getSizes().get(RandomObject.class));
         Assert.assertTrue(oc.remove(RandomObject.class, "A"));
     }
 }

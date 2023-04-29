@@ -1,9 +1,6 @@
 package com.hackinghat.agent;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
-
-import com.hackinghat.instrument.ConstantTickSizeToLevelConverter;
+import com.hackinghat.model.ConstantTickSizeToLevelConverter;
 import com.hackinghat.model.Currency;
 import com.hackinghat.model.Instrument;
 import com.hackinghat.order.Order;
@@ -19,22 +16,22 @@ import org.junit.Test;
 
 import java.time.LocalTime;
 
-public class AgentTest
-{
+import static org.junit.Assert.assertEquals;
+
+public class AgentTest {
 
     private RandomSource randomSource;
-    private TimeMachine  timeMachine;
-    private Instrument   instrument;
-    private void checkBalances(double cash, int shares, Agent a)
-    {
+    private TimeMachine timeMachine;
+    private Instrument instrument;
+
+    private void checkBalances(double cash, int shares, Agent a) {
         assertEquals(cash, a.getCash(), 0.01);
         assertEquals(shares, a.getShares());
 
     }
 
     @Before
-    public void setup()
-    {
+    public void setup() {
         timeMachine = new TimeMachine(LocalTime.of(8, 0, 0), 1.0d);
         timeMachine.start();
         randomSource = new RandomSourceImpl(0L);
@@ -48,11 +45,10 @@ public class AgentTest
 
 
     @Test
-    public void testCancel()
-    {
+    public void testCancel() {
         try (final AgentImplTest ai = new AgentImplTest(instrument, randomSource, 1L)) {
-            Order buy = new Order("C1", OrderSide.BUY, instrument, 1.0, 1000, ai, timeMachine);
-            Order managerBuyOrder = (Order)buy.copy();
+            Order buy = new Order("C1", OrderSide.BUY, instrument, 1.0f, 1000, ai, timeMachine);
+            Order managerBuyOrder = (Order) buy.copy();
             managerBuyOrder.setId(1L);
             buy.cancel(timeMachine.toSimulationTime());
             Assert.assertEquals(OrderState.PENDING_CANCEL, buy.getState());
@@ -62,20 +58,19 @@ public class AgentTest
     }
 
     @Test
-    public void testBalances()
-    {
+    public void testBalances() {
         try (final AgentImplTest ai = new AgentImplTest(instrument, randomSource, 1L)) {
             ai.setBalances(10000.0, 1000);
-            Order buy = new Order("B1", OrderSide.BUY, instrument, 1.0, 1000, ai, timeMachine);
-            Order sell = new Order("B1", OrderSide.SELL, instrument, 1.01, 1000, ai, timeMachine);
+            Order buy = new Order("B1", OrderSide.BUY, instrument, 1.0f, 1000, ai, timeMachine);
+            Order sell = new Order("B1", OrderSide.SELL, instrument, 1.01f, 1000, ai, timeMachine);
             checkBalances(10000.0, 1000, ai);
-            ai.fill(buy, 500, instrument.getLevel(1.0));
+            ai.fill(buy, 500, instrument.getLevel(1.0f));
             checkBalances(9500.0, 1500, ai);
-            ai.fill(sell, 500, instrument.getLevel(1.01));
+            ai.fill(sell, 500, instrument.getLevel(1.01f));
             checkBalances(10005.0, 1000, ai);
-            ai.fill(buy, 500, instrument.getLevel(1.0));
+            ai.fill(buy, 500, instrument.getLevel(1.0f));
             checkBalances(9505.0, 1500, ai);
-            ai.fill(sell, 500, instrument.getLevel(1.01));
+            ai.fill(sell, 500, instrument.getLevel(1.01f));
             checkBalances(10010.0, 1000, ai);
         }
     }

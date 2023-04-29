@@ -1,15 +1,10 @@
 package com.hackinghat.kafka;
 
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.Serializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 
-import java.lang.invoke.SerializedLambda;
 import java.util.Properties;
-import java.util.function.Supplier;
 
 public class KafkaConfigBuilder {
     public final static String BOOTSTRAP_SERVERS = "kafka:9092";

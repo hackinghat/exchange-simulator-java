@@ -1,13 +1,12 @@
 package com.hackinghat.order;
 
-import com.hackinghat.orderbook.OrderInterest;
 import com.hackinghat.model.Level;
-import javax.annotation.Nonnull;
+import com.hackinghat.orderbook.OrderInterest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayDeque;
 import java.util.Objects;
 
@@ -15,33 +14,18 @@ import java.util.Objects;
  * Encapsulates the collection of orders at the same price point.  For the purposes of this simulator
  * a market order is at a special level of {@link }.
  */
-public class OrderLimitQueue
-{
+public class OrderLimitQueue {
     private final static boolean DEBUG = false;
     private final static Logger LOG = LogManager.getLogger(OrderLimitQueue.class);
 
     @Nonnull
-    private final OrderInterest       interest;
+    private final OrderInterest interest;
     @Nonnull
-    private final ArrayDeque<Order>   orders;
+    private final ArrayDeque<Order> orders;
     @Nonnull
-    private final Level               level;
+    private final Level level;
     @Nonnull
-    private OrderSide           side;
-
-    public OrderInterest getInterest() {
-        return interest;
-    }
-
-    public Level getLevel() {
-        return level;
-    }
-
-    public ArrayDeque<Order> getOrders() {
-        return orders;
-    }
-
-    public OrderSide getSide() { return side; }
+    private final OrderSide side;
 
     public OrderLimitQueue(final Level level, OrderSide queueSide) {
         Objects.requireNonNull(level);
@@ -49,12 +33,30 @@ public class OrderLimitQueue
         this.interest = new OrderInterest(queueSide, level, 0L);
         this.orders = new ArrayDeque<>();
         this.level = level;
+        this.side = queueSide;
     }
 
-    private void throwIfInvalid(final Order order)
-    {
-        if (DEBUG)
-        {
+    @Nonnull
+    public OrderInterest getInterest() {
+        return interest;
+    }
+
+    @Nonnull
+    public Level getLevel() {
+        return level;
+    }
+
+    @Nonnull
+    public ArrayDeque<Order> getOrders() {
+        return orders;
+    }
+
+    public OrderSide getSide() {
+        return side;
+    }
+
+    private void throwIfInvalid(final Order order) {
+        if (DEBUG) {
             if (order.isMarket() != level.isMarket())
                 throw new IllegalArgumentException("Internal error: Order and limit types don't match!");
             if (!order.isMarket() && !order.getLevel().equals(interest.getLevel()))
@@ -62,16 +64,14 @@ public class OrderLimitQueue
         }
     }
 
-    public void add(Order order)
-    {
+    public void add(Order order) {
         throwIfInvalid(order);
         interest.add(order.getRemainingQuantity());
         orders.addLast(order);
         verifyInterest();
     }
 
-    public void remove(Order order, final int quantity)
-    {
+    public void remove(Order order, final int quantity) {
         throwIfInvalid(order);
         if (orders.remove(order))
             interest.remove(quantity);
@@ -80,19 +80,16 @@ public class OrderLimitQueue
         verifyInterest();
     }
 
-    void verifyInterest()
-    {
-        if (DEBUG)
-        {
+    void verifyInterest() {
+        if (DEBUG) {
             int count = 0;
             long quantity = 0;
-            for (final Order order : orders)
-            {
+            for (final Order order : orders) {
                 quantity += order.getRemainingQuantity();
                 count += 1;
             }
             final OrderInterest interest = getInterest();
-            assert(quantity == interest.getQuantity() && count == interest.getCount());
+            assert (quantity == interest.getQuantity() && count == interest.getCount());
         }
     }
 
@@ -104,22 +101,16 @@ public class OrderLimitQueue
      * @param simulationTime time of change
      * @return null if there's no remaining quantity otherwise the supplied order is returned
      */
-    public Order execute(final Order order, final int quantity, final Level price, final LocalDateTime simulationTime)
-    {
+    public Order execute(final Order order, final int quantity, final Level price, final LocalDateTime simulationTime) {
         throwIfInvalid(order);
-        for (final Order ourOrder : orders)
-        {
-            if (ourOrder.equals(order))
-            {
+        for (final Order ourOrder : orders) {
+            if (ourOrder.equals(order)) {
                 ourOrder.fillQuantity(quantity, price, simulationTime);
-                if (OrderState.isTerminal(ourOrder.getState()))
-                {
+                if (OrderState.isTerminal(ourOrder.getState())) {
                     remove(ourOrder, quantity);
                     verifyInterest();
                     return null;
-                }
-                else
-                {
+                } else {
                     interest.reduce(quantity);
                     verifyInterest();
                     return order;

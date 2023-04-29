@@ -1,7 +1,6 @@
 package com.hackinghat.util;
 
 import com.hackinghat.statistic.SampledStatistic;
-import jdk.dynalink.CallSiteDescriptor;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -12,10 +11,11 @@ import java.util.function.Supplier;
  * then place their results into the queue but are flushed immediately (rather than waiting to be batched by a
  * separate thread). Other appenders (such as {@link  FileStatisticsAppender}) are designed to occupy a thread and drain
  * the incoming queue of events as they are added.
- * @param <Source> the type being sampled
+ *
+ * @param <Source>    the type being sampled
  * @param <Statistic> the statistic(s) being measured
  */
-public class SamplingStatisticAppender<Source, Statistic extends SampledStatistic<Source>> extends FileStatisticsAppender<Statistic>{
+public class SamplingStatisticAppender<Source, Statistic extends SampledStatistic<Source>> extends FileStatisticsAppender<Statistic> {
 
     private final SampledStatistic<Source> sampledStatistic;
     private final Supplier<Source> sourceGetter;
@@ -37,8 +37,7 @@ public class SamplingStatisticAppender<Source, Statistic extends SampledStatisti
             sampledStatistic.update(sourceGetter.get());
             append(sampledStatistic.formatStatistic(timeMachine));
             writePending();
-        }
-        catch (final Exception ex) {
+        } catch (final Exception ex) {
             LOG.error("Unable to format statistic: ", ex);
         }
     }

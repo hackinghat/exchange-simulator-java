@@ -15,48 +15,45 @@ import org.apache.logging.log4j.Logger;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 
-public abstract class Agent extends AbstractComponent implements Nameable, Identifiable<Long>, Runnable, Statistic
-{
+public abstract class Agent extends AbstractComponent implements Nameable, Identifiable<Long>, Runnable, Statistic {
     private static final Logger LOG = LogManager.getLogger(Agent.class);
-    protected final Object                sync;
-
-    private double                        initialCash;
-    private int                           initialShares;
-
-    private final Long                    id;
-    private final String                  name;
-    private final boolean                 canBeOverdrawn;
-    private ScheduledFuture<?>            future;
-    private boolean                       first;
-    private double                        cash;
-    private int                           shares;
-    private boolean                       overdrawn;
-
-    protected int                         tooLateCount;
-    protected int                         rejectedCount;
-    protected int                         newOrderCount;
-    protected int                         cancelCount;
-    protected int                         amendCount;
-    protected int                         fillCount;
-
-    protected final Set<Order>                  outstandingOrders;
-    protected final RandomSource                randomSource;
+    protected final Object sync;
+    protected final Set<Order> outstandingOrders;
+    protected final RandomSource randomSource;
     protected final ThreadLocalFormat<DecimalFormat> decimalFormatThread;
-    protected final TimeMachine                 timeMachine;
-    protected final Instrument                  instrument;
-    protected final EventDispatcher             dispatcher;
+    protected final TimeMachine timeMachine;
+    protected final Instrument instrument;
+    protected final EventDispatcher dispatcher;
+    private final Long id;
+    private final String name;
+    private final boolean canBeOverdrawn;
+    protected int tooLateCount;
+    protected int rejectedCount;
+    protected int newOrderCount;
+    protected int cancelCount;
+    protected int amendCount;
+    protected int fillCount;
+    private double initialCash;
+    private int initialShares;
+    private ScheduledFuture<?> future;
+    private boolean first;
+    private double cash;
+    private int shares;
+    private boolean overdrawn;
 
-    public Agent(final Long id, final Instrument instrument, final RandomSource randomSource, final TimeMachine timeMachine, final String name, final EventDispatcher dispatcher, final boolean canBeOverdrawn)
-    {
+    public Agent(final Long id, final Instrument instrument, final RandomSource randomSource, final TimeMachine timeMachine, final String name, final EventDispatcher dispatcher, final boolean canBeOverdrawn) {
         super(name);
         this.id = id;
         this.name = name;
         this.future = null;
         this.first = true;
-        this.outstandingOrders = Collections.synchronizedSet(new  HashSet<>());
+        this.outstandingOrders = Collections.synchronizedSet(new HashSet<>());
         this.sync = new Object();
         this.randomSource = randomSource;
         this.decimalFormatThread = new ThreadLocalFormat<>(DecimalFormat.class, "#,##0.##");
@@ -94,31 +91,43 @@ public abstract class Agent extends AbstractComponent implements Nameable, Ident
     }
 
     @MBeanAttribute(description = "Too Late")
-    public int getTooLateCount() { return tooLateCount; }
+    public int getTooLateCount() {
+        return tooLateCount;
+    }
 
     @MBeanAttribute(description = "Rejected")
-    public int getRejectedCount() { return rejectedCount; }
+    public int getRejectedCount() {
+        return rejectedCount;
+    }
 
     @MBeanAttribute(description = "Filled")
-    public int getFillCount() { return fillCount; }
+    public int getFillCount() {
+        return fillCount;
+    }
 
     @MBeanAttribute(description = "New Count")
-    public int getNewOrderCount() { return newOrderCount; }
+    public int getNewOrderCount() {
+        return newOrderCount;
+    }
 
     @MBeanAttribute(description = "Cancelled")
-    public int getCancelCount() { return cancelCount; }
+    public int getCancelCount() {
+        return cancelCount;
+    }
 
     @MBeanAttribute(description = "Amended")
-    public int getAmendCount() { return amendCount; }
+    public int getAmendCount() {
+        return amendCount;
+    }
 
-    public Pair<Double, Integer> getBalance() { synchronized(sync) {
-        return Pair.instanceOf(cash, shares);
-    }}
+    public Pair<Double, Integer> getBalance() {
+        synchronized (sync) {
+            return Pair.instanceOf(cash, shares);
+        }
+    }
 
-    public void setBalances(double cash, int shares)
-    {
-        synchronized (sync)
-        {
+    public void setBalances(double cash, int shares) {
+        synchronized (sync) {
             this.initialCash = cash;
             this.initialShares = shares;
             this.cash = cash;
@@ -126,39 +135,31 @@ public abstract class Agent extends AbstractComponent implements Nameable, Ident
         }
     }
 
-    public double cashChange()
-    {
+    public double cashChange() {
         return cash - initialCash;
     }
 
-    public int sharesChange()
-    {
+    public int sharesChange() {
         return shares - initialShares;
     }
 
 
-    public void fill(final Order order, final int quantity, final Level price)
-    {
-        synchronized (sync)
-        {
+    public void fill(final Order order, final int quantity, final Level price) {
+        synchronized (sync) {
             fillCount++;
-            switch (order.getSide())
-            {
+            switch (order.getSide()) {
                 case BUY:
                     shares += quantity;
-                    cash -= price.getPrice().doubleValue()*quantity;
+                    cash -= price.getPrice() * quantity;
                     break;
                 case SELL:
                     shares -= quantity;
-                    cash += price.getPrice().doubleValue()*quantity;
+                    cash += price.getPrice() * quantity;
                     break;
             }
-            if (canBeOverdrawn && (cash <= 0 && shares <= 0))
-            {
+            if (canBeOverdrawn && (cash <= 0 && shares <= 0)) {
                 overdrawn = true;
-            }
-            else if (initialCash / 4.0 > cash && initialShares / 4 > shares)
-            {
+            } else if (initialCash / 4.0 > cash && initialShares / 4 > shares) {
                 LOG.info("Agent " + getName() + " is down to 25% stake (cash & shares)");
             }
         }
@@ -167,29 +168,22 @@ public abstract class Agent extends AbstractComponent implements Nameable, Ident
     /**
      * We want to collect all the parameters of the agents in a simulation so that we can analyse it later, some agents
      * aren't interesting to study though (like test ones) so we default to an unimplemented method.
+     *
      * @param timeMachine the current time
      * @return a string that represents information about the agent
      */
-    public String formatStatistic(final TimeMachine timeMachine)
-    {
+    public String formatStatistic(final TimeMachine timeMachine) {
         throw new UnsupportedOperationException();
     }
 
-    public void orderUpdate(final Order orderChanged)
-    {
-        synchronized (sync)
-        {
+    public void orderUpdate(final Order orderChanged) {
+        synchronized (sync) {
             assert (orderChanged.getSender() == this);
-            if (OrderState.PENDING_NEW.equals(orderChanged.getState()) || outstandingOrders.remove(orderChanged))
-            {
-                if (!OrderState.isTerminal(orderChanged.getState()))
-                {
+            if (OrderState.PENDING_NEW.equals(orderChanged.getState()) || outstandingOrders.remove(orderChanged)) {
+                if (!OrderState.isTerminal(orderChanged.getState())) {
                     outstandingOrders.add(orderChanged);
-                }
-                else
-                {
-                    switch (orderChanged.getState())
-                    {
+                } else {
+                    switch (orderChanged.getState()) {
                         case FILLED:
                             if (LOG.isTraceEnabled())
                                 LOG.trace("Filled: " + orderChanged);
@@ -201,16 +195,13 @@ public abstract class Agent extends AbstractComponent implements Nameable, Ident
 
                     }
                 }
-            }
-            else
-            {
+            } else {
                 throw new IllegalArgumentException(getName() + " received orderUpdate request for unknown order: " + orderChanged);
             }
         }
     }
 
-    public void tooLate(final Order order)
-    {
+    public void tooLate(final Order order) {
         tooLateCount++;
         if (LOG.isTraceEnabled())
             LOG.trace("Too late to cancel: " + order);
@@ -218,8 +209,7 @@ public abstract class Agent extends AbstractComponent implements Nameable, Ident
             throw new IllegalArgumentException("Received too late notification on order that is still live");
     }
 
-    public void rejected(final Order order, final String reason)
-    {
+    public void rejected(final Order order, final String reason) {
         rejectedCount++;
         if (LOG.isTraceEnabled())
             LOG.trace("Order rejected, because: '" + reason + "', " + order);
@@ -234,6 +224,7 @@ public abstract class Agent extends AbstractComponent implements Nameable, Ident
     /**
      * This is mainly for use in tests where the presence of an order in the agent will be as a result of whether the
      * order manager has filled it or not
+     *
      * @param order the order to check
      * @return true if the order is currently outstanding
      */
@@ -263,14 +254,10 @@ public abstract class Agent extends AbstractComponent implements Nameable, Ident
         return id.equals(agent.id);
     }
 
-    public void schedule()
-    {
-        if (overdrawn)
-        {
+    public void schedule() {
+        if (overdrawn) {
             LOG.info(getName() + " is overdrawn and can no longer continue (cash=" + cash + " /shares= " + shares + ")");
-        }
-        else
-        {
+        } else {
             long wakeupTime = wakeUp().toNanos();
             if (LOG.isTraceEnabled())
                 LOG.trace(getName() + " - wakeup in " + wakeupTime + "ms");
@@ -281,47 +268,37 @@ public abstract class Agent extends AbstractComponent implements Nameable, Ident
     protected abstract void doActions();
 
     @MBeanAttribute(description = "Outstanding orders")
-    public int getOutstandingOrderCount()
-    {
+    public int getOutstandingOrderCount() {
         return outstandingOrders.size();
     }
 
     @Override
-    public void run()
-    {
-        try
-        {
-            if (!first)
-            {
+    public void run() {
+        try {
+            if (!first) {
                 if (LOG.isTraceEnabled()) LOG.trace(getName() + ": START");
-                synchronized (sync)
-                {
+                synchronized (sync) {
                     doActions();
                 }
                 if (LOG.isTraceEnabled()) LOG.trace(getName() + ": END");
             }
             first = false;
-        }
-        catch (final Exception ex)
-        {
+        } catch (final Exception ex) {
             // The fact that the agent messed itself is not very important to the simulation, it could probably
             // get added to a journal of agent's actions
             if (LOG.isTraceEnabled())
                 LOG.trace(getName() + ": error processing actions: ", ex);
-        }
-        finally
-        {
+        } finally {
             schedule();
         }
     }
 
     @Override
     public String toString() {
-        synchronized (sync)
-        {
+        synchronized (sync) {
             return "Agent{" +
                     "name='" + name + "', cash=" + decimalFormatThread.get().format(getCash()) +
-                     ", shares = " + getShares() + "}";
+                    ", shares = " + getShares() + "}";
 
         }
     }

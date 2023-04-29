@@ -12,20 +12,47 @@ public class MBeanTestService extends AbstractComponent {
     private int testInt;
     private double testFloat;
 
+    public MBeanTestService() {
+        super("MBeanTestService");
+    }
+
+    public MBeanTestService(final String testString, final int testInt, final float testFloat) {
+        this();
+        this.testString = testString;
+        this.initialValue = testString;
+        this.testInt = testInt;
+        this.testFloat = testFloat;
+    }
+
     @MBeanAttribute(description = "Test read-only string")
-    public String getTestString() { return testString; }
+    public String getTestString() {
+        return testString;
+    }
+
     @MBeanAttribute(description = "Test read-only datetime")
-    public void setTestString(final String value) { testString = value; }
+    public void setTestString(final String value) {
+        testString = value;
+    }
 
     @MBeanAttribute(description = "Test read-only integer")
-    public int getTestInt() { return testInt; }
+    public int getTestInt() {
+        return testInt;
+    }
+
     @MBeanAttribute(description = "Test read-only integer")
-    public void setTestInt(final int testInt) { this.testInt = testInt; }
+    public void setTestInt(final int testInt) {
+        this.testInt = testInt;
+    }
 
     @MBeanAttribute(description = "Test read-only float")
-    public double getTestFloat() { return testFloat; }
+    public double getTestFloat() {
+        return testFloat;
+    }
+
     @MBeanAttribute(description = "Test read-only float")
-    public void setTestFloat(final double  testFloat) { this.testFloat = testFloat; }
+    public void setTestFloat(final double testFloat) {
+        this.testFloat = testFloat;
+    }
 
     @MBeanOperation(description = "Test reset")
     public void reset() {
@@ -38,18 +65,6 @@ public class MBeanTestService extends AbstractComponent {
     public void reset(final int testInt, final String testString, final float testFloat) {
         this.testInt = testInt;
         this.testString = testString;
-        this.testFloat = testFloat;
-    }
-
-    public MBeanTestService() {
-        super("MBeanTestService");
-    }
-
-    public MBeanTestService(final String testString, final int testInt, final float testFloat) {
-        this();
-        this.testString = testString;
-        this.initialValue = testString;
-        this.testInt = testInt;
         this.testFloat = testFloat;
     }
 }

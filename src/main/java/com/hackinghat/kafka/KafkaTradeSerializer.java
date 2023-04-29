@@ -7,6 +7,7 @@ public class KafkaTradeSerializer extends KafkaJsonSerializer<Trade> {
     public KafkaTradeSerializer() {
         super(null);
     }
+
     public KafkaTradeSerializer(final SimulatorObjectMapper mapper) {
         super(mapper);
     }

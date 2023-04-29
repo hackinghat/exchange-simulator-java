@@ -6,83 +6,29 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collection;
 
 import static org.junit.Assert.*;
 
-public class CachedValueTest
-{
-    private TimeMachine         timeMachine;
-    private EventDispatcher     eventDispatcher;
-    private NotSoRandomSource   randomSource;
+public class CachedValueTest {
+    private TimeMachine timeMachine;
+    private EventDispatcher eventDispatcher;
+    private NotSoRandomSource randomSource;
 
-    private class VisForValue implements Copyable<VisForValue>, Timestampable
-    {
-        final Integer value;
-        LocalDateTime timeStamp;
-
-        public VisForValue(final Integer newValue)
-        {
-            this.value = newValue;
-            this.timeStamp = timeMachine.toSimulationTime();
-        }
-
-        @Override
-        public VisForValue copy()
-        {
-            return new VisForValue(value);
-        }
-
-        @Override
-        public VisForValue copy(final LocalDateTime localTime)
-        {
-            return new VisForValue(value);
-        }
-
-        @Override
-        public LocalDateTime getTimestamp()
-        {
-            return timeStamp;
-        }
-
-        @Override
-        public void setTimestamp(final LocalDateTime timestamp)
-        {
-            this.timeStamp = timestamp;
-        }
-
-        int getValue()
-        {
-            return value;
-        }
-
-        @Override
-        public VisForValue cloneEx() throws CloneNotSupportedException
-        {
-            return VisForValue.class.cast(this.clone());
-        }
-    }
-
-    private VisForValue supplyOne()
-    {
+    private VisForValue supplyOne() {
         return new VisForValue(randomSource.nextInt(10));
     }
 
-    private VisForValue suppyNone()
-    {
+    private VisForValue suppyNone() {
         return null;
     }
 
     @Before
-    public void before()
-    {
+    public void before() {
         timeMachine = new TimeMachine();
         eventDispatcher = new SyncEventDispatcher(timeMachine);
         randomSource = new NotSoRandomSource();
-        randomSource.setIntSource(new int[] { 1, 2, 3});
+        randomSource.setIntSource(new int[]{1, 2, 3});
     }
 
     @After
@@ -91,8 +37,7 @@ public class CachedValueTest
     }
 
     @Test
-    public void testEmptyCachedValue() throws Exception
-    {
+    public void testEmptyCachedValue() throws Exception {
         final CachedValue<VisForValue> cachedValue = new CachedValue<>(VisForValue.class, timeMachine, Duration.of(1L, ChronoUnit.MINUTES), this::supplyOne, eventDispatcher, true);
         assertNull(cachedValue.peek());
         assertNull(cachedValue.getInProgress());
@@ -104,8 +49,7 @@ public class CachedValueTest
     }
 
     @Test
-    public void testSetNullValue() throws Exception
-    {
+    public void testSetNullValue() throws Exception {
         final CachedValue<VisForValue> cachedValue = new CachedValue<>(VisForValue.class, timeMachine, Duration.of(1L, ChronoUnit.MINUTES), this::suppyNone, eventDispatcher, true);
         assertNull(cachedValue.peek());
         assertNull(cachedValue.getInProgress());
@@ -114,5 +58,44 @@ public class CachedValueTest
         assertNull(cachedValue.getInProgress().get());
         // The supplier function returned no value so we should still have nothing
         assertNull(cachedValue.peek());
+    }
+
+    private class VisForValue implements Copyable<VisForValue>, Timestampable {
+        final Integer value;
+        LocalDateTime timeStamp;
+
+        public VisForValue(final Integer newValue) {
+            this.value = newValue;
+            this.timeStamp = timeMachine.toSimulationTime();
+        }
+
+        @Override
+        public VisForValue copy() {
+            return new VisForValue(value);
+        }
+
+        @Override
+        public VisForValue copy(final LocalDateTime localTime) {
+            return new VisForValue(value);
+        }
+
+        @Override
+        public LocalDateTime getTimestamp() {
+            return timeStamp;
+        }
+
+        @Override
+        public void setTimestamp(final LocalDateTime timestamp) {
+            this.timeStamp = timestamp;
+        }
+
+        int getValue() {
+            return value;
+        }
+
+        @Override
+        public VisForValue cloneEx() throws CloneNotSupportedException {
+            return VisForValue.class.cast(this.clone());
+        }
     }
 }

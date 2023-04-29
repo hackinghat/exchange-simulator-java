@@ -6,11 +6,12 @@ import com.hackinghat.util.Event;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.*;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
-public class AuctionTriggerEvent extends Event
-{
+public class AuctionTriggerEvent extends Event {
     public final static Set<MarketState> DEFAULT_PRE_AUCTION_STATES = EnumSet.of(
             MarketState.CHOICE, MarketState.BACK, MarketState.CONTINUOUS, MarketState.AUCTION,
             MarketState.CLOSED);
@@ -18,13 +19,12 @@ public class AuctionTriggerEvent extends Event
     public final static Set<MarketState> DEFAULT_AUCTION_STATES = EnumSet.of(
             MarketState.AUCTION);
 
-    private final Set<MarketState>  preconditions;
-    private final MarketState       postcondition;
-    private final Level             referenceLevel;
-    private final Duration          extensionDuration;
+    private final Set<MarketState> preconditions;
+    private final MarketState postcondition;
+    private final Level referenceLevel;
+    private final Duration extensionDuration;
 
-    public AuctionTriggerEvent(final Object sender, final LocalDateTime timeOccurred, final Set<MarketState> preconditions, final MarketState postcondition, final Level referenceLevel, final Duration extensionDuration)
-    {
+    public AuctionTriggerEvent(final Object sender, final LocalDateTime timeOccurred, final Set<MarketState> preconditions, final MarketState postcondition, final Level referenceLevel, final Duration extensionDuration) {
         super(sender, timeOccurred);
         Objects.requireNonNull(preconditions);
         if (!DEFAULT_PRE_AUCTION_STATES.contains(postcondition))
@@ -38,33 +38,27 @@ public class AuctionTriggerEvent extends Event
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return getTimestamp().hashCode();
     }
 
-    public Level getReferenceLevel()
-    {
+    public Level getReferenceLevel() {
         return referenceLevel;
     }
 
-    public boolean hasReferenceLevel()
-    {
+    public boolean hasReferenceLevel() {
         return referenceLevel != null;
     }
 
-    public Set<MarketState> getPreconditions()
-    {
+    public Set<MarketState> getPreconditions() {
         return preconditions;
     }
 
-    public MarketState getPostcondition()
-    {
+    public MarketState getPostcondition() {
         return postcondition;
     }
 
-    public Duration getExtensionDuration()
-    {
+    public Duration getExtensionDuration() {
         return extensionDuration;
     }
 

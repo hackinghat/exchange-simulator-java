@@ -1,5 +1,6 @@
 package com.hackinghat.agent;
 
+import com.hackinghat.agent.ZeroIntelligenceMarketMaker.OrderPosition;
 import com.hackinghat.order.Order;
 import com.hackinghat.order.OrderSide;
 import com.hackinghat.orderbook.Level1;
@@ -12,33 +13,33 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import static com.hackinghat.simulator.OrderBookSimulatorHelper.ONE_SECOND;
-import com.hackinghat.agent.ZeroIntelligenceMarketMaker.OrderPosition;
 import static org.junit.Assert.*;
 
-public class ZeroIntelligenceMarketMakerTest
-{
+public class ZeroIntelligenceMarketMakerTest {
     private OrderBookSimulatorHelper simulatorHelper;
     private ZeroIntelligenceMarketMaker zeroMM;
     private Collection<Order> preheatedOrders;
     private int spread;
     private int spreadTolerance;
 
+    private static void checkOrderPosition(final ZeroIntelligenceMarketMaker marketMaker, final Level1 level1, final OrderPosition expectedBidPosition, final OrderPosition expectedOfferPosition) {
+        assertEquals(expectedBidPosition, marketMaker.calculateOrderPosition(level1, marketMaker.getBid()));
+        assertEquals(expectedOfferPosition, marketMaker.calculateOrderPosition(level1, marketMaker.getOffer()));
+    }
+
     @Before
-    public void setup()
-    {
+    public void setup() {
         simulatorHelper = new OrderBookSimulatorHelper();
     }
 
     @After
-    public void teardown()
-    {
+    public void teardown() {
         simulatorHelper.shutdown();
         if (zeroMM != null)
             zeroMM.shutdown();
     }
 
-    private void continuousTrading() throws Exception
-    {
+    private void continuousTrading() throws Exception {
         simulatorHelper.setDoubleSource(new double[]{0.0});
         simulatorHelper.transitionClosedToAuction();
         preheatedOrders = new ArrayList<>(simulatorHelper.submitOrder(10, 1, 1, true));
@@ -52,8 +53,7 @@ public class ZeroIntelligenceMarketMakerTest
     }
 
     @Test
-    public void testInAuction() throws Exception
-    {
+    public void testInAuction() throws Exception {
         simulatorHelper.setDoubleSource(new double[]{0.0});
         simulatorHelper.transitionClosedToAuction();
         simulatorHelper.submitOrder(10, 1, 1, true);
@@ -66,23 +66,15 @@ public class ZeroIntelligenceMarketMakerTest
     }
 
     @Test
-    public void testContinuous() throws Exception
-    {
+    public void testContinuous() throws Exception {
         continuousTrading();
         assertNotNull(zeroMM.getBid());
         assertNotNull(zeroMM.getOffer());
         assertEquals(spread, zeroMM.getOffer().getLevel().absoluteticksBetween(zeroMM.getBid().getLevel()));
     }
 
-    private static void checkOrderPosition(final ZeroIntelligenceMarketMaker marketMaker, final Level1 level1, final OrderPosition expectedBidPosition, final OrderPosition expectedOfferPosition)
-    {
-        assertEquals(expectedBidPosition, marketMaker.calculateOrderPosition(level1, marketMaker.getBid()));
-        assertEquals(expectedOfferPosition, marketMaker.calculateOrderPosition(level1, marketMaker.getOffer()));
-    }
-
     @Test
-    public void testMidChange() throws Exception
-    {
+    public void testMidChange() throws Exception {
         continuousTrading();
         final Order bid = zeroMM.getBid();
         assertNotNull(bid);
@@ -98,7 +90,7 @@ public class ZeroIntelligenceMarketMakerTest
         // Now put an offer order in at the previous mid (1.5) this will change the spread to 1.0-1.5 and the mid to 1.25
         simulatorHelper.submitOrder(0, 0, 1000, false);
         final Level1 midChange = simulatorHelper.getSimulator().getLevel1();
-        assertEquals(1.25, midChange.getMid(simulatorHelper.getInst()).getPrice().doubleValue(), 1E-9);
+        assertEquals(1.25, midChange.getMid(simulatorHelper.getInst()).getPrice(), 1E-9);
         // Now the market maker should have a different offer to the best offer
         assertEquals(zeroMM.getBid().getLevel().getLevel(), midChange.getBid().getLevel().getLevel());
         assertNotEquals(zeroMM.getOffer().getLevel().getLevel(), midChange.getOffer().getLevel().getLevel());

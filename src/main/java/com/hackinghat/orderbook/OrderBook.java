@@ -1,18 +1,15 @@
 package com.hackinghat.orderbook;
 
 import com.hackinghat.model.Instrument;
-import com.hackinghat.order.*;
 import com.hackinghat.model.Level;
+import com.hackinghat.order.*;
 import com.hackinghat.util.component.AbstractComponent;
 import com.hackinghat.util.mbean.MBeanAttribute;
 import com.hackinghat.util.mbean.MBeanType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -21,38 +18,44 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Represents a collection of queues that represent the orders at the various limit/market prices on this side of the book
  * There are some concurrency considerations to consider with this type.
- *
+ * <p>
  * Firstly the orders that it works on are 'copies' of the orders maintained by the agents.  This allows
  * the agents to have a different version of the order to that known by the exchange.  This is what you'd expect
  * to see in the real market.
- *
+ * <p>
  * Agents should know how to process responses from the exchange that indicate their view of the order is not
  * consistent with that of the exchange.  For example, an order becomes fully filled while the agent has submitted
  * a cancel.
- *
+ * <p>
  * TODO: We need a way to reliably lock a book when both book sides are being modified/accessed
  */
 @MBeanType(description = "Order Book")
-public class OrderBook extends AbstractComponent
-{
+public class OrderBook extends AbstractComponent {
     private static final Logger LOG = LogManager.getLogger(OrderBook.class);
-    private final OrderInterest                           marketInterest;
-    private final OrderSide                               queueSide;
-    private final Instrument                              instrument;
-    private final NavigableMap<Level, OrderLimitQueue>    limitQueue;
+    private final OrderInterest marketInterest;
+    private final OrderSide queueSide;
+    private final Instrument instrument;
+    private final NavigableMap<Level, OrderLimitQueue> limitQueue;
 
     // ReadWriteLock's are only strictly 'fair'!
     private final ReadWriteLock lock = new ReentrantReadWriteLock(true);
     private final Lock readLock = lock.readLock();
     private final Lock writeLock = lock.writeLock();
 
-    public OrderBook(final OrderSide queueSide, final Instrument instrument)
-    {
+    public OrderBook(final OrderSide queueSide, final Instrument instrument) {
         super("OrderBook-" + instrument.getTicker() + "-" + queueSide);
         this.queueSide = queueSide;
         this.instrument = instrument;
         this.limitQueue = new TreeMap<>(Level.comparator(queueSide));
         this.marketInterest = new OrderInterest(queueSide, instrument.getMarket(), 0, 0);
+    }
+
+    private static Order getOurOrder(Collection<Order> orders, Order order) {
+        for (Order search : orders) {
+            if (search.equals(order))
+                return search;
+        }
+        return null;
     }
 
     @MBeanAttribute(description = "Level depth")
@@ -64,22 +67,17 @@ public class OrderBook extends AbstractComponent
         return queueSide;
     }
 
-    OrderInterest getInterest(final Level level)
-    {
+    OrderInterest getInterest(final Level level) {
         readLock.lock();
-        try
-        {
+        try {
             final OrderLimitQueue orderLimitQueue = limitQueue.get(level);
             return orderLimitQueue == null ? null : orderLimitQueue.getInterest();
-        }
-        finally
-        {
+        } finally {
             readLock.unlock();
         }
     }
 
-    boolean otherLevelAllowsExecution(Level otherSideLevel)
-    {
+    boolean otherLevelAllowsExecution(Level otherSideLevel) {
         final Level bestLevel = getBestLimitQueue().getLevel();
         if (bestLevel.isMarket() && otherSideLevel.isMarket())
             return false;
@@ -88,19 +86,16 @@ public class OrderBook extends AbstractComponent
         return (queueSide == OrderSide.BUY ? bestLevel.getLevel() >= otherSideLevel.getLevel() : bestLevel.getLevel() <= otherSideLevel.getLevel());
     }
 
-    private OrderLimitQueue getOrAddLimitQueue(final Level level)
-    {
+    private OrderLimitQueue getOrAddLimitQueue(final Level level) {
         OrderLimitQueue limit = limitQueue.get(level);
-        if (limit == null)
-        {
+        if (limit == null) {
             limit = new OrderLimitQueue(level, queueSide);
             limitQueue.put(level, limit);
         }
         return limit;
     }
 
-    public boolean newOrder(Order newOrder)
-    {
+    public boolean newOrder(Order newOrder) {
         if (newOrder == null || newOrder.getId() == null)
             throw new IllegalArgumentException("Can't accept order: id is null");
         if (newOrder.getSide() != queueSide)
@@ -109,8 +104,7 @@ public class OrderBook extends AbstractComponent
             throw new IllegalArgumentException("Can't accept order: Order is pending");
 
         writeLock.lock();
-        try
-        {
+        try {
             final Level level = newOrder.getLevel();
             final OrderLimitQueue limit = getOrAddLimitQueue(level);
             if (limit.getOrders().contains(newOrder))
@@ -118,29 +112,24 @@ public class OrderBook extends AbstractComponent
             limit.add(newOrder);
             return true;
 
-        }
-        finally
-        {
+        } finally {
             writeLock.unlock();
         }
     }
 
-    boolean replaceOrder(final Order oldOrder, final Order newOrder)
-    {
+    boolean replaceOrder(final Order oldOrder, final Order newOrder) {
         return cancelOrder(oldOrder) || newOrder(newOrder);
     }
 
-    boolean cancelOrder(final Order oldOrder)
-    {
+    boolean cancelOrder(final Order oldOrder) {
         if (oldOrder == null || oldOrder.getId() == null || OrderState.isPending(oldOrder.getState()))
             return false;
 
         writeLock.lock();
-        try
-        {
+        try {
             final Collection<Order> orderSet = getOrders(oldOrder.getLevel());
             Order ourOrder = getOurOrder(orderSet, oldOrder);
-            if (ourOrder == null)  {
+            if (ourOrder == null) {
                 oldOrder.tooLate();
                 return false;
             } else {
@@ -148,26 +137,22 @@ public class OrderBook extends AbstractComponent
                 limitQueue.remove(oldOrder, oldOrder.getRemainingQuantity());
                 return true;
             }
-        }
-        finally
-        {
+        } finally {
             writeLock.unlock();
         }
     }
 
-
     /**
      * Should be called with the read or write lock held.
+     *
      * @param price the price level to retrieve the orders for
      * @return the current orders with remaining quantity at the requested price
      */
-    Collection<Order> getOrders(final Level price)
-    {
+    Collection<Order> getOrders(final Level price) {
         return getLimitQueue(price).getOrders();
     }
 
-    private OrderLimitQueue getLimitQueue(final Level price)
-    {
+    private OrderLimitQueue getLimitQueue(final Level price) {
         return getOrAddLimitQueue(price);
     }
 
@@ -182,34 +167,19 @@ public class OrderBook extends AbstractComponent
      *
      * @return a collection of cloned interests for this side in the marketable order.
      */
-    public Collection<OrderInterest> getExecutableLevels()
-    {
+    public Collection<OrderInterest> getExecutableLevels() {
         readLock.lock();
-        try
-        {
+        try {
             final List<OrderInterest> executable = new ArrayList<>();
-            for (final Map.Entry<Level, OrderLimitQueue> levelAndQ : limitQueue.entrySet())
-            {
+            for (final Map.Entry<Level, OrderLimitQueue> levelAndQ : limitQueue.entrySet()) {
                 final OrderInterest interest = levelAndQ.getValue().getInterest();
                 if (interest.getCount() > 0)
                     executable.add(interest.copy());
             }
             return executable;
-        }
-        finally
-        {
+        } finally {
             readLock.unlock();
         }
-    }
-
-    private static Order getOurOrder(Collection<Order> orders, Order order)
-    {
-        for (Order search : orders)
-        {
-            if (search.equals(order))
-                return search;
-        }
-        return null;
     }
 
     /***
@@ -220,40 +190,33 @@ public class OrderBook extends AbstractComponent
      * @param simulationTime the time that the execution was agreed
      * @return null if there is no more to execute, otherwise the partially filled order
      */
-    Order execute(final Order order, final int quantity, final Level executionPrice, final LocalDateTime simulationTime)
-    {
+    Order execute(final Order order, final int quantity, final Level executionPrice, final LocalDateTime simulationTime) {
         Objects.requireNonNull(order);
         Objects.requireNonNull(executionPrice);
-        assert(quantity>0);
+        assert (quantity > 0);
 
         writeLock.lock();
-        try
-        {
+        try {
             OrderLimitQueue limitQueue = getLimitQueue(order.getLevel());
             return limitQueue.execute(order, quantity, executionPrice, simulationTime) == null ? null : order;
-        }
-        finally
-        {
+        } finally {
             writeLock.unlock();
         }
     }
 
-    OrderLimitQueue getMarketQueue()
-    {
+    OrderLimitQueue getMarketQueue() {
         return getOrAddLimitQueue(instrument.getMarket());
     }
 
     /**
      * The best queue is the first non-market queue in 'side' order that has an active order
+     *
      * @return the level at the top of the book or the market queue if there is none
      */
-    OrderLimitQueue getBestLimitQueue()
-    {
+    OrderLimitQueue getBestLimitQueue() {
         readLock.lock();
-        try
-        {
-            for (Map.Entry<Level, OrderLimitQueue> limit : limitQueue.entrySet())
-            {
+        try {
+            for (Map.Entry<Level, OrderLimitQueue> limit : limitQueue.entrySet()) {
                 if (limit.getKey().isMarket())
                     continue;
 
@@ -262,41 +225,32 @@ public class OrderBook extends AbstractComponent
                     return orderLimitQueue;
             }
             return getMarketQueue();
-        }
-        finally
-        {
+        } finally {
             readLock.unlock();
         }
     }
 
-    OrderInterest getBestInterest()
-    {
+    OrderInterest getBestInterest() {
         readLock.lock();
-        try
-        {
+        try {
             OrderInterest bestInterest = getBestLimitQueue().getInterest();
             return bestInterest.getTouchInterest(getMarketQueue().getInterest());
-        }
-        finally
-        {
+        } finally {
             readLock.unlock();
         }
     }
 
-    PriorityOrders getPriorityOrders()
-    {
+    PriorityOrders getPriorityOrders(final Level opposingLevel) {
         final OrderLimitQueue bestQueue = getBestLimitQueue();
         if (bestQueue.getLevel().isMarket())
-            return new PriorityOrders(instrument, Collections.singleton(getBestLimitQueue()));
+            return new PriorityOrders(instrument, opposingLevel, Collections.singleton(bestQueue));
         else
-            return new PriorityOrders(instrument, Arrays.asList(getBestLimitQueue(), getMarketQueue()));
+            return new PriorityOrders(instrument, opposingLevel, Arrays.asList(getMarketQueue(), bestQueue));
     }
 
-    PriorityOrders getAuctionPriorityOrders(final Level auctionLevel)
-    {
+    PriorityOrders getAuctionPriorityOrders(final Level auctionLevel) {
         final List<OrderLimitQueue> available = new ArrayList<>();
-        for (Map.Entry<Level, OrderLimitQueue> limit : limitQueue.entrySet())
-        {
+        for (Map.Entry<Level, OrderLimitQueue> limit : limitQueue.entrySet()) {
             final Level level = limit.getKey();
             if (level.isMarket() || level.betterThanOrEqual(auctionLevel, getQueueSide()))
                 available.add(limit.getValue());
@@ -307,25 +261,21 @@ public class OrderBook extends AbstractComponent
     /**
      * TODO: This method returns the order interest at the VWAP price.  This price must be rounded
      * to the nearest tick to be represented by an interest.  Which makes it no-longer a VWAP price!
+     *
      * @return the VWAP represented as an {@see OrderInterest}
      */
-    OrderInterest getVwapOfLimitOrders()
-    {
+    OrderInterest getVwapOfLimitOrders() {
         readLock.lock();
-        try
-        {
+        try {
             long quantity = 0;
-            BigDecimal value = BigDecimal.ZERO;
+            double value = 0.d;
             int vwapCount = 0;
-            for (Map.Entry<Level, OrderLimitQueue> item : limitQueue.entrySet())
-            {
-                if (!item.getKey().isMarket())
-                {
+            for (Map.Entry<Level, OrderLimitQueue> item : limitQueue.entrySet()) {
+                if (!item.getKey().isMarket()) {
                     OrderInterest interest = item.getValue().getInterest();
-                    if (interest.getCount() > 0)
-                    {
+                    if (interest.getCount() > 0) {
                         quantity += interest.getQuantity();
-                        value = value.add(interest.getValue(BigDecimal.ZERO));
+                        value += interest.getValue(0.f);
                         vwapCount += interest.getCount();
                     }
                 }
@@ -333,37 +283,29 @@ public class OrderBook extends AbstractComponent
             if (quantity == 0) {
                 return marketInterest;
             } else {
-                final Level vwapLevel =  instrument.getLevel(value.divide(new BigDecimal(quantity), RoundingMode.HALF_UP));
+                final Level vwapLevel = instrument.getLevel((float) (value / quantity));
                 return new OrderInterest(queueSide, vwapLevel, quantity, vwapCount);
             }
-        }
-        finally
-        {
+        } finally {
             readLock.unlock();
         }
     }
 
-    OrderInterest getMarketInterest()
-    {
+    OrderInterest getMarketInterest() {
         readLock.lock();
-        try
-        {
+        try {
             return getMarketQueue().getInterest();
-        }
-        finally
-        {
+        } finally {
             readLock.unlock();
         }
     }
 
-    public int size()
-    {
+    public int size() {
         return limitQueue.size();
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "OrderBook{" +
                 "queueSide=" + queueSide +
                 ", best=" + getBestLimitQueue().getInterest() + '}';

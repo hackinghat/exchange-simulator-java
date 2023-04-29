@@ -5,20 +5,19 @@ import com.hackinghat.order.MarketState;
 
 import javax.annotation.Nonnull;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Objects;
 
 public class Touch implements Level1 {
     @Nonnull
-    private       LocalDateTime   simulationTime;
+    private final OrderInterest bid;
     @Nonnull
-    private final OrderInterest   bid;
+    private final OrderInterest offer;
     @Nonnull
-    private final OrderInterest   offer;
+    private final MarketState touchState;
     @Nonnull
-    private final MarketState     touchState;
+    private final MarketState marketState;
     @Nonnull
-    private final MarketState     marketState;
+    private LocalDateTime simulationTime;
 
 
     public Touch(@Nonnull final LocalDateTime simulationTime, @Nonnull final MarketState marketState, @Nonnull final OrderInterest bid, @Nonnull final OrderInterest offer) {
@@ -59,10 +58,14 @@ public class Touch implements Level1 {
     }
 
     @Override
-    public LocalDateTime getTimestamp() { return simulationTime; }
+    public LocalDateTime getTimestamp() {
+        return simulationTime;
+    }
 
     @Override
-    public void setTimestamp(final LocalDateTime simulationTime) { this.simulationTime = simulationTime; }
+    public void setTimestamp(final LocalDateTime simulationTime) {
+        this.simulationTime = simulationTime;
+    }
 
     @Override
     public String toString() {
@@ -75,8 +78,7 @@ public class Touch implements Level1 {
     }
 
     @Override
-    public Touch cloneEx() throws CloneNotSupportedException
-    {
+    public Touch cloneEx() throws CloneNotSupportedException {
         return Touch.class.cast(clone());
     }
 }

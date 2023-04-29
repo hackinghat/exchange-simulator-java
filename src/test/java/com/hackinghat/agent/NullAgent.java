@@ -9,23 +9,18 @@ import com.hackinghat.util.mbean.MBeanType;
 import java.time.Duration;
 
 @MBeanType(description = "Simulation agent")
-public class NullAgent extends Agent
-{
-    public NullAgent(final Long id, final Instrument instrument, final RandomSource randomSource, final TimeMachine timeMachine, final String name, final EventDispatcher dispatcher)
-    {
+public class NullAgent extends Agent {
+    public NullAgent(final Long id, final Instrument instrument, final RandomSource randomSource, final TimeMachine timeMachine, final String name, final EventDispatcher dispatcher) {
         super(id, instrument, randomSource, timeMachine, name, dispatcher, false);
     }
 
     @Override
-    public Duration wakeUp()
-    {
+    public Duration wakeUp() {
         return Duration.ZERO;
     }
 
 
-
     @Override
-    protected void doActions()
-    {
+    protected void doActions() {
     }
 }

@@ -1,10 +1,9 @@
 package com.hackinghat.model.serialize;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.hackinghat.instrument.ConstantTickSizeToLevelConverter;
+import com.hackinghat.model.ConstantTickSizeToLevelConverter;
 import com.hackinghat.model.Currency;
 import com.hackinghat.model.Instrument;
-import com.hackinghat.model.Trade;
 import com.hackinghat.util.*;
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,9 +25,9 @@ public class ObjectCacheSerializerTest {
         final ObjectCache objectCache = new ObjectCache();
         objectCache.addCache(instrumentCache);
         objectCache.addCache(currencyCache);
-        final SimulatorObjectMapper mapper  = new SimulatorObjectMapper(SimulatorObjectMapperAudience.PUBLIC, new TimeMachine());
+        final SimulatorObjectMapper mapper = new SimulatorObjectMapper(SimulatorObjectMapperAudience.PUBLIC, new TimeMachine());
         Assert.assertEquals("{\"currency\":[{\"currency\":\"GBP\",\"scale\":2,\"timestamp\":\"-999999999-01-01T00:01:15\"}," +
-                                                    "{\"currency\":\"USD\",\"scale\":2,\"timestamp\":\"-999999999-01-01T00:01:15\"}]," +
+                "{\"currency\":\"USD\",\"scale\":2,\"timestamp\":\"-999999999-01-01T00:01:15\"}]," +
                 "\"instrument\":[{\"ticker\":\"VOD\",\"description\":\"Vodafone Plc\",\"currency\":\"GBP\",\"tickConverter\":{\"type\":\"constant\",\"tickSize\":0.5},\"timestamp\":\"-999999999-01-01T00:01:15\"}]}", mapper.writeValueAsString(objectCache));
     }
 }

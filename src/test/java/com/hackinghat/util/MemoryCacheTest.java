@@ -1,12 +1,9 @@
 package com.hackinghat.util;
 
-import com.hackinghat.model.Instrument;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.Objects;
 import java.util.Optional;
 
 public class MemoryCacheTest {
@@ -21,7 +18,7 @@ public class MemoryCacheTest {
         Assert.assertEquals(ro1, opt.get());
         Assert.assertNotSame(ro1, opt.get());
         Assert.assertThrows(NullPointerException.class, () -> instrumentCache.insert(new RandomObject(null, 1L)));
-        Assert.assertThrows(NullPointerException.class, () -> instrumentCache.insert((RandomObject)null));
+        Assert.assertThrows(NullPointerException.class, () -> instrumentCache.insert( null));
         Assert.assertThrows(IllegalArgumentException.class, () -> instrumentCache.insert(new RandomObject("A", 1L)));
     }
 
@@ -39,9 +36,9 @@ public class MemoryCacheTest {
         opt = instrumentCache.get(ro1.getId());
         Assert.assertTrue(opt.isPresent());
         Assert.assertEquals(opt.get(), ro1);
-        Assert.assertNotSame(ro1, instrumentCache.get(ro1.getId()));
+        Assert.assertNotSame(ro1, instrumentCache.get(ro1.getId()).get());
         Assert.assertThrows(NullPointerException.class, () -> instrumentCache.update(new RandomObject(null, 1L)));
-        Assert.assertThrows(NullPointerException.class, () -> instrumentCache.update((RandomObject)null));
+        Assert.assertThrows(NullPointerException.class, () -> instrumentCache.update((RandomObject) null));
     }
 
     @Test

@@ -11,17 +11,17 @@ import com.hackinghat.util.Timestampable;
 /**
  * The top level for each side, and the interest at the level
  */
-public interface Level1 extends Timestampable, Copyable
-{
-    OrderInterest   getBid();
-    OrderInterest   getOffer();
-    MarketState     getTouchState();
-    MarketState     getMarketState();
+public interface Level1 extends Timestampable, Copyable {
+    OrderInterest getBid();
 
-    default OrderInterest getInterest(final OrderSide side)
-    {
-        switch (side)
-        {
+    OrderInterest getOffer();
+
+    MarketState getTouchState();
+
+    MarketState getMarketState();
+
+    default OrderInterest getInterest(final OrderSide side) {
+        switch (side) {
             case BUY:
                 return getBid();
             case SELL:
@@ -31,13 +31,11 @@ public interface Level1 extends Timestampable, Copyable
         }
     }
 
-    default Level getPrice(final OrderSide side)
-    {
+    default Level getPrice(final OrderSide side) {
         return getInterest(side).getLevel();
     }
 
-    default Integer getSpread()
-    {
+    default Integer getSpread() {
         final Level bid = getPrice(OrderSide.BUY);
         final Level offer = getPrice(OrderSide.SELL);
         if (bid == null || bid.isMarket() || offer == null || offer.isMarket())
@@ -45,15 +43,13 @@ public interface Level1 extends Timestampable, Copyable
         return offer.absoluteticksBetween(bid);
     }
 
-    default Level getMid(final Instrument instrument)
-    {
+    default Level getMid(final Instrument instrument) {
         final Level bid = getPrice(OrderSide.BUY);
         final Integer spread = getSpread();
         return spread == null ? null : instrument.betterOnBook(bid, OrderSide.BUY, getSpread() / 2);
     }
 
-    default int ticksBetweenBidAndOffer() throws InvalidMarketStateException
-    {
+    default int ticksBetweenBidAndOffer() throws InvalidMarketStateException {
         if (!getTouchState().hasSpread())
             throw new InvalidMarketStateException("Market is not valid");
         final OrderInterest bid = getBid();
@@ -64,7 +60,7 @@ public interface Level1 extends Timestampable, Copyable
     }
 
     default String format() {
-        return String.format("%d %f - %f %d", getBid().getQuantity(), getBid().getLevel().getPrice().doubleValue(),
-                getOffer().getLevel().getPrice().doubleValue(), getOffer().getQuantity());
+        return String.format("%d %f - %f %d", getBid().getQuantity(), getBid().getLevel().getPrice(),
+                getOffer().getLevel().getPrice(), getOffer().getQuantity());
     }
 }

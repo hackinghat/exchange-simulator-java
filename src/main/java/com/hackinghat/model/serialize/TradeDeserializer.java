@@ -10,10 +10,8 @@ import com.hackinghat.model.Instrument;
 import com.hackinghat.model.Trade;
 import com.hackinghat.util.MemoryCache;
 import com.hackinghat.util.SimulatorObjectMapper;
-import com.hackinghat.util.SimulatorObjectMapperAudience;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.Objects;
 
 public class TradeDeserializer extends StdDeserializer<Trade> {
@@ -25,7 +23,7 @@ public class TradeDeserializer extends StdDeserializer<Trade> {
     }
 
     @Override
-    public Trade deserialize(final JsonParser jsonParser, final  DeserializationContext deserializationContext) throws IOException, JacksonException {
+    public Trade deserialize(final JsonParser jsonParser, final DeserializationContext deserializationContext) throws IOException, JacksonException {
         final Trade trade = new Trade();
         final ObjectCodec codec = jsonParser.getCodec();
         final JsonNode node = codec.readTree(jsonParser);
@@ -39,7 +37,7 @@ public class TradeDeserializer extends StdDeserializer<Trade> {
         trade.setQuantity(node.get("quantity").intValue());
         trade.setFlags(node.get("flags").textValue());
         trade.setInstrument(instrument);
-        trade.setLevel(instrument.getLevel(new BigDecimal(node.get("price").toString())));
+        trade.setLevel(instrument.getLevel(Float.parseFloat(node.get("price").toString())));
         return trade;
     }
 }

@@ -20,30 +20,16 @@ import static com.hackinghat.util.component.ComponentState.STOPPED;
 public class AbstractComponentTest {
     protected static final Logger LOG = LogManager.getLogger(AbstractComponentTest.class);
 
-    @MBeanType(description = "My abstract component")
-    private static class MyAbstractComponent extends AbstractComponent {
-
-        public MyAbstractComponent(final String name) {
-            super(name);
-        }
-
-        public MyAbstractComponent(final String name, MyAbstractComponent dependents) {
-            super(name);
-            require(dependents);
-        }
-    }
-
     public static int checkNumberOfMBeans(final int expected, final String callSite) {
         try {
             Set<ObjectName> names = ManagementFactory.getPlatformMBeanServer().queryNames(new ObjectName("com.hacking*:*"), null);
             if (expected != names.size()) {
                 final String message = "Was expecting " + expected + " registered mbeans in " + callSite + ", but found " + names.size() + ". ";
                 LOG.error(message + String.join(",", names.stream().map(String::valueOf).collect(Collectors.joining(","))) + ")");
-                throw new IllegalStateException(message  + " (see error log for names");
+                throw new IllegalStateException(message + " (see error log for names");
             }
             return names.size();
-        }
-        catch (final MalformedObjectNameException malex) {
+        } catch (final MalformedObjectNameException malex) {
             LOG.error(malex);
         }
         return 0;
@@ -104,10 +90,10 @@ public class AbstractComponentTest {
     public void testClose() {
         try (final AbstractComponent ac1 = new MyAbstractComponent("BOGOF1")) {
             Assert.assertNotNull(ac1);
-        };
+        }
         try (final AbstractComponent ac2 = new MyAbstractComponent("BOGOF1")) {
             Assert.assertNotNull(ac2);
-        };
+        }
     }
 
     @Test
@@ -165,6 +151,7 @@ public class AbstractComponentTest {
             }
         }
     }
+
     @Test
     public void testShutdown() {
         try (final AbstractComponent client1 = new MyAbstractComponent("CLIENT1");
@@ -216,7 +203,7 @@ public class AbstractComponentTest {
         try (final AbstractComponent a = new MyAbstractComponent("A");
              final AbstractComponent b = new MyAbstractComponent("B");
              final AbstractComponent c = new MyAbstractComponent("C");
-             final AbstractComponent z = new MyAbstractComponent("Z");) {
+             final AbstractComponent z = new MyAbstractComponent("Z")) {
             a.require(b);
             b.require(c);
             c.require(z);
@@ -243,7 +230,7 @@ public class AbstractComponentTest {
         try (final AbstractComponent sh = new MyAbstractComponent("sh");
              final AbstractComponent s = new MyAbstractComponent("s");
              final AbstractComponent mm = new MyAbstractComponent("mm");
-             final AbstractComponent d = new MyAbstractComponent("d")){
+             final AbstractComponent d = new MyAbstractComponent("d")) {
             mm.require(d);
             sh.require(mm);
             s.require(mm);
@@ -259,6 +246,19 @@ public class AbstractComponentTest {
             Assert.assertEquals(RUNNING, ac.getState());
             ac.stop();
             Assert.assertEquals(STOPPED, ac.getState());
+        }
+    }
+
+    @MBeanType(description = "My abstract component")
+    private static class MyAbstractComponent extends AbstractComponent {
+
+        public MyAbstractComponent(final String name) {
+            super(name);
+        }
+
+        public MyAbstractComponent(final String name, MyAbstractComponent dependents) {
+            super(name);
+            require(dependents);
         }
     }
 

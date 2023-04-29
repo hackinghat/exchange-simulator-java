@@ -11,36 +11,12 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class EventDispatcherTest
-{
-    private static class AuctionListener implements Listener
-    {
-        final List<AuctionTriggerEvent> receivedEvents = new ArrayList<>();
-        final EventDispatcher dispatcher;
-
-        public AuctionListener(final EventDispatcher dispatcher)
-        {
-            this.dispatcher = dispatcher;
-        }
-
-        @Override
-        public void notify(final Event event)
-        {
-            if (event instanceof AuctionTriggerEvent) {
-                final AuctionTriggerEvent triggerEvent = AuctionTriggerEvent.class.cast(event);
-                if (triggerEvent.getExtensionDuration() == Duration.ZERO)
-                    throw new IllegalArgumentException("event");
-                receivedEvents.add(triggerEvent);
-            }
-        }
-    }
-
+public class EventDispatcherTest {
     /**
      * Listners that are also dispatchers of the same event shouldn't receive their own event back
      */
     @Test
-    public void testNoEcho()
-    {
+    public void testNoEcho() {
         final TimeMachine timeMachine = new TimeMachine();
         try (final SyncEventDispatcher eventDispatcher = new SyncEventDispatcher(timeMachine)) {
             final AuctionListener l = new AuctionListener(eventDispatcher);
@@ -57,8 +33,7 @@ public class EventDispatcherTest
     }
 
     @Test
-    public void testBadlyBehaved()
-    {
+    public void testBadlyBehaved() {
         final TimeMachine timeMachine = new TimeMachine();
         try (final SyncEventDispatcher eventDispatcher = new SyncEventDispatcher(timeMachine)) {
             final AuctionListener l1 = new AuctionListener(eventDispatcher);
@@ -69,6 +44,25 @@ public class EventDispatcherTest
             eventDispatcher.dispatch(someEvent);
             assertEquals(0, l1.receivedEvents.size());
             assertEquals(0, l2.receivedEvents.size());
+        }
+    }
+
+    private static class AuctionListener implements Listener {
+        final List<AuctionTriggerEvent> receivedEvents = new ArrayList<>();
+        final EventDispatcher dispatcher;
+
+        public AuctionListener(final EventDispatcher dispatcher) {
+            this.dispatcher = dispatcher;
+        }
+
+        @Override
+        public void notify(final Event event) {
+            if (event instanceof AuctionTriggerEvent) {
+                final AuctionTriggerEvent triggerEvent = AuctionTriggerEvent.class.cast(event);
+                if (triggerEvent.getExtensionDuration() == Duration.ZERO)
+                    throw new IllegalArgumentException("event");
+                receivedEvents.add(triggerEvent);
+            }
         }
     }
 }

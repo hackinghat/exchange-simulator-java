@@ -3,10 +3,7 @@ package com.hackinghat.util;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.temporal.ValueRange;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class ObjectCache {
 

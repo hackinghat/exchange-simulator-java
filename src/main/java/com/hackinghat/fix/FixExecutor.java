@@ -1,35 +1,20 @@
 package com.hackinghat.fix;
 
+import org.quickfixj.jmx.JmxExporter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import quickfix.*;
+import quickfix.mina.acceptor.DynamicAcceptorSessionProvider;
+import quickfix.mina.acceptor.DynamicAcceptorSessionProvider.TemplateMapping;
+
+import javax.management.JMException;
+import javax.management.ObjectName;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import javax.management.JMException;
-import javax.management.ObjectName;
-import org.quickfixj.jmx.JmxExporter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import quickfix.ConfigError;
-import quickfix.DefaultMessageFactory;
-import quickfix.FieldConvertError;
-import quickfix.FileStoreFactory;
-import quickfix.LogFactory;
-import quickfix.MessageFactory;
-import quickfix.MessageStoreFactory;
-import quickfix.RuntimeError;
-import quickfix.ScreenLogFactory;
-import quickfix.SessionID;
-import quickfix.SessionSettings;
-import quickfix.SocketAcceptor;
-import quickfix.mina.acceptor.DynamicAcceptorSessionProvider;
-import quickfix.mina.acceptor.DynamicAcceptorSessionProvider.TemplateMapping;
 
 
 public class FixExecutor {
@@ -49,55 +34,6 @@ public class FixExecutor {
         this.jmxExporter = new JmxExporter();
         this.connectorObjectName = this.jmxExporter.register(this.acceptor);
         log.info("Acceptor registered with JMX, name={}", this.connectorObjectName);
-    }
-
-    private void configureDynamicSessions(SessionSettings settings, FixApplication application, MessageStoreFactory messageStoreFactory, LogFactory logFactory, MessageFactory messageFactory) throws ConfigError, FieldConvertError {
-        Iterator sectionIterator = settings.sectionIterator();
-
-        while(sectionIterator.hasNext()) {
-            SessionID sessionID = (SessionID)sectionIterator.next();
-            if (this.isSessionTemplate(settings, sessionID)) {
-                InetSocketAddress address = this.getAcceptorSocketAddress(settings, sessionID);
-                this.getMappings(address).add(new TemplateMapping(sessionID, sessionID));
-            }
-        }
-
-        for (Entry<InetSocketAddress, List<TemplateMapping>> inetSocketAddressListEntry : this.dynamicSessionMappings.entrySet()) {
-            this.acceptor.setSessionProvider(inetSocketAddressListEntry.getKey(), new DynamicAcceptorSessionProvider(settings, inetSocketAddressListEntry.getValue(), application, messageStoreFactory, logFactory, messageFactory));
-        }
-
-    }
-
-    private List<TemplateMapping> getMappings(InetSocketAddress address) {
-        return this.dynamicSessionMappings.computeIfAbsent(address, (k) -> new ArrayList<>());
-    }
-
-    private InetSocketAddress getAcceptorSocketAddress(SessionSettings settings, SessionID sessionID) throws ConfigError, FieldConvertError {
-        String acceptorHost = "0.0.0.0";
-        if (settings.isSetting(sessionID, "SocketAcceptAddress")) {
-            acceptorHost = settings.getString(sessionID, "SocketAcceptAddress");
-        }
-
-        int acceptorPort = (int)settings.getLong(sessionID, "SocketAcceptPort");
-        return new InetSocketAddress(acceptorHost, acceptorPort);
-    }
-
-    private boolean isSessionTemplate(SessionSettings settings, SessionID sessionID) throws ConfigError, FieldConvertError {
-        return settings.isSetting(sessionID, "AcceptorTemplate") && settings.getBool(sessionID, "AcceptorTemplate");
-    }
-
-    private void start() throws RuntimeError, ConfigError {
-        this.acceptor.start();
-    }
-
-    private void stop() {
-        try {
-            this.jmxExporter.getMBeanServer().unregisterMBean(this.connectorObjectName);
-        } catch (Exception var2) {
-            log.error("Failed to unregister acceptor from JMX", var2);
-        }
-
-        this.acceptor.stop();
     }
 
     public static void main(String[] args) throws Exception {
@@ -130,5 +66,54 @@ public class FixExecutor {
         }
 
         return inputStream;
+    }
+
+    private void configureDynamicSessions(SessionSettings settings, FixApplication application, MessageStoreFactory messageStoreFactory, LogFactory logFactory, MessageFactory messageFactory) throws ConfigError, FieldConvertError {
+        Iterator sectionIterator = settings.sectionIterator();
+
+        while (sectionIterator.hasNext()) {
+            SessionID sessionID = (SessionID) sectionIterator.next();
+            if (this.isSessionTemplate(settings, sessionID)) {
+                InetSocketAddress address = this.getAcceptorSocketAddress(settings, sessionID);
+                this.getMappings(address).add(new TemplateMapping(sessionID, sessionID));
+            }
+        }
+
+        for (Entry<InetSocketAddress, List<TemplateMapping>> inetSocketAddressListEntry : this.dynamicSessionMappings.entrySet()) {
+            this.acceptor.setSessionProvider(inetSocketAddressListEntry.getKey(), new DynamicAcceptorSessionProvider(settings, inetSocketAddressListEntry.getValue(), application, messageStoreFactory, logFactory, messageFactory));
+        }
+
+    }
+
+    private List<TemplateMapping> getMappings(InetSocketAddress address) {
+        return this.dynamicSessionMappings.computeIfAbsent(address, (k) -> new ArrayList<>());
+    }
+
+    private InetSocketAddress getAcceptorSocketAddress(SessionSettings settings, SessionID sessionID) throws ConfigError, FieldConvertError {
+        String acceptorHost = "0.0.0.0";
+        if (settings.isSetting(sessionID, "SocketAcceptAddress")) {
+            acceptorHost = settings.getString(sessionID, "SocketAcceptAddress");
+        }
+
+        int acceptorPort = (int) settings.getLong(sessionID, "SocketAcceptPort");
+        return new InetSocketAddress(acceptorHost, acceptorPort);
+    }
+
+    private boolean isSessionTemplate(SessionSettings settings, SessionID sessionID) throws ConfigError, FieldConvertError {
+        return settings.isSetting(sessionID, "AcceptorTemplate") && settings.getBool(sessionID, "AcceptorTemplate");
+    }
+
+    private void start() throws RuntimeError, ConfigError {
+        this.acceptor.start();
+    }
+
+    private void stop() {
+        try {
+            this.jmxExporter.getMBeanServer().unregisterMBean(this.connectorObjectName);
+        } catch (Exception var2) {
+            log.error("Failed to unregister acceptor from JMX", var2);
+        }
+
+        this.acceptor.stop();
     }
 }

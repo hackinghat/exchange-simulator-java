@@ -1,7 +1,6 @@
 package com.hackinghat.order;
 
-public enum OrderType
-{
+public enum OrderType {
     LIMIT,
     MARKET
 }

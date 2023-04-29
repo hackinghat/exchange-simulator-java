@@ -6,34 +6,30 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.Closeable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 public abstract class AbstractStatisticsAppender implements Runnable, Closeable {
-    protected final Logger LOG;
     private final static long DEFAULT_POLL_TIME = 10000L;
-
+    protected final Logger LOG;
     private final LinkedBlockingQueue<String> statsQueue;
-    private AtomicBoolean terminate;
-
-    public static String defaultObjectArrayFormatter(final Object[] item) {
-        final String[] result = new String[item.length];
-        for (int i = 0; i < item.length; ++i) {
-            result[i] = "\"" +(item[i] == null ? "" : item[i].toString()) + "\"";
-        }
-        return String.join(",", result);
-    }
-
+    private final AtomicBoolean terminate;
 
     public AbstractStatisticsAppender() {
         this.statsQueue = new LinkedBlockingQueue<>();
         this.terminate = new AtomicBoolean(false);
-        this.LOG =  LogManager.getLogger(getClass().getSimpleName());
+        this.LOG = LogManager.getLogger(getClass().getSimpleName());
+    }
+
+    public static String defaultObjectArrayFormatter(final Object[] item) {
+        final String[] result = new String[item.length];
+        for (int i = 0; i < item.length; ++i) {
+            result[i] = "\"" + (item[i] == null ? "" : item[i].toString()) + "\"";
+        }
+        return String.join(",", result);
     }
 
     public void append(final String item) {
@@ -54,7 +50,9 @@ public abstract class AbstractStatisticsAppender implements Runnable, Closeable 
         }
     }
 
-    public long size() { return statsQueue.size(); }
+    public long size() {
+        return statsQueue.size();
+    }
 
     public void terminate() {
         terminate.set(true);
@@ -66,7 +64,7 @@ public abstract class AbstractStatisticsAppender implements Runnable, Closeable 
     public void close() {
         terminate();
     }
-    
+
     void writePending() {
         try {
             List<String> itemsToAppend = new ArrayList<>();
@@ -76,12 +74,10 @@ public abstract class AbstractStatisticsAppender implements Runnable, Closeable 
                 statsQueue.drainTo(itemsToAppend);
                 process(itemsToAppend);
             }
-        }
-        catch (final InterruptedException iex) {
+        } catch (final InterruptedException iex) {
             if (LOG.isTraceEnabled())
                 LOG.trace("Awoke prematurely from poll", iex);
-        }
-        catch (final Throwable t) {
+        } catch (final Throwable t) {
             LOG.error("Error writing statistics: ", t);
         }
     }

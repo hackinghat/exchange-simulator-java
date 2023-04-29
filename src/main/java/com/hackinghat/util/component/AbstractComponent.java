@@ -20,14 +20,15 @@ public class AbstractComponent implements Component {
     protected static final Logger LOG = LogManager.getLogger(AbstractComponent.class);
 
     final static ComponentState[][] TRANSITIONS;
+
     static {
         TRANSITIONS = new ComponentState[][]{
-                new ComponentState[] { STOPPED,     STARTING            },
-                new ComponentState[] { STARTING,    RUNNING,    FAILED  },
-                new ComponentState[] { RUNNING,     SUSPENDED,  STOPPING,   FAILED  },
-                new ComponentState[] { FAILED,      STARTING,   STOPPED },
-                new ComponentState[] { SUSPENDED,   RUNNING,    FAILED  },
-                new ComponentState[] { STOPPING,    STOPPED             },
+                new ComponentState[]{STOPPED, STARTING},
+                new ComponentState[]{STARTING, RUNNING, FAILED},
+                new ComponentState[]{RUNNING, SUSPENDED, STOPPING, FAILED},
+                new ComponentState[]{FAILED, STARTING, STOPPED},
+                new ComponentState[]{SUSPENDED, RUNNING, FAILED},
+                new ComponentState[]{STOPPING, STOPPED},
         };
         // A fairly basic test that ensures we can use the enum ordinal to get the allowed transitions
         for (int i = 0; i < TRANSITIONS.length; ++i) {
@@ -55,8 +56,7 @@ public class AbstractComponent implements Component {
         try {
             holder = new MBeanHolder(this, name);
             holder.registerMBean();
-        }
-        catch (final InstanceAlreadyExistsException | NotCompliantMBeanException | MBeanRegistrationException ex) {
+        } catch (final InstanceAlreadyExistsException | NotCompliantMBeanException | MBeanRegistrationException ex) {
             LOG.error("Unable to register component", ex);
             throw new RuntimeException(ex);
         }
@@ -84,6 +84,7 @@ public class AbstractComponent implements Component {
 
     /**
      * Return true if this component is a requirement of the argument
+     *
      * @param requirement the component
      * @return true if the component is required by this component to function
      */
@@ -93,6 +94,7 @@ public class AbstractComponent implements Component {
 
     /**
      * Return true if this component is referenced by argument
+     *
      * @param reference the component
      * @return true if the component is referenced by this component
      */
@@ -186,6 +188,7 @@ public class AbstractComponent implements Component {
 
     /**
      * Removing a reference, that leaves this component unreferenced, will cause it to get shutdown
+     *
      * @param component the component we want to remove a reference to
      * @return true if the component reference was removed
      */
@@ -213,7 +216,9 @@ public class AbstractComponent implements Component {
         }
     }
 
-    public MBeanHolder getHolder() { return holder; }
+    public MBeanHolder getHolder() {
+        return holder;
+    }
 
     void transition(final ComponentState target) throws IllegalStateException {
         transition(target, false);
@@ -253,9 +258,10 @@ public class AbstractComponent implements Component {
 
     /**
      * Apply a single function to all dependencies
+     *
      * @param successState the state to move to on success
      * @param failureState the state to move to on failure
-     * @param consumer the function to call on each dependency
+     * @param consumer     the function to call on each dependency
      */
     void applyToAllComponents(final ComponentState successState, final ComponentState failureState, Consumer<Component> consumer, final Component[] components) {
         try {
@@ -263,8 +269,7 @@ public class AbstractComponent implements Component {
                 consumer.accept(dependency);
             }
             transition(successState);
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             LOG.error("Unable to invoke transition to " + successState + " for " + getName() + ", reason: ", t);
             transition(failureState);
         }

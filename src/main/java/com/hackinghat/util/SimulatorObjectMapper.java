@@ -2,7 +2,7 @@ package com.hackinghat.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.hackinghat.instrument.ConstantTickSizeToLevelConverter;
+import com.hackinghat.model.ConstantTickSizeToLevelConverter;
 import com.hackinghat.model.Currency;
 import com.hackinghat.model.Instrument;
 import com.hackinghat.model.Trade;
@@ -10,22 +10,15 @@ import com.hackinghat.model.serialize.*;
 
 public class SimulatorObjectMapper extends ObjectMapper {
 
-    private static final ObjectCache            OBJECT_CACHE;
+    private static final ObjectCache OBJECT_CACHE;
 
     static {
-        OBJECT_CACHE  = new ObjectCache();
+        OBJECT_CACHE = new ObjectCache();
         OBJECT_CACHE.addCache(new MemoryCache<>(Instrument.class));
     }
 
-    private final TimeMachine                       timeMachine;
-    private final SimulatorObjectMapperAudience     audience;
-
-    public TimeMachine getTimeMachine() { return timeMachine; }
-    public SimulatorObjectMapperAudience getAudience() { return audience; }
-
-    public <K extends Comparable<K>, V extends CopyableAndIdentifiable<K>> MemoryCache<K, V> getCache(Class<V> valueClazz) {
-        return OBJECT_CACHE.getCache(valueClazz);
-    }
+    private final TimeMachine timeMachine;
+    private final SimulatorObjectMapperAudience audience;
 
     public SimulatorObjectMapper(final SimulatorObjectMapperAudience audience, final TimeMachine timeMachine) {
         super();
@@ -46,5 +39,17 @@ public class SimulatorObjectMapper extends ObjectMapper {
         // ObjectCache
         module.addSerializer(ObjectCache.class, new ObjectCacheSerializer());
         registerModule(module);
+    }
+
+    public TimeMachine getTimeMachine() {
+        return timeMachine;
+    }
+
+    public SimulatorObjectMapperAudience getAudience() {
+        return audience;
+    }
+
+    public <K extends Comparable<K>, V extends CopyableAndIdentifiable<K>> MemoryCache<K, V> getCache(Class<V> valueClazz) {
+        return OBJECT_CACHE.getCache(valueClazz);
     }
 }

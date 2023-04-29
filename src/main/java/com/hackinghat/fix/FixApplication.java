@@ -1,46 +1,17 @@
 package com.hackinghat.fix;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import quickfix.*;
+import quickfix.examples.executor.MarketDataProvider;
+import quickfix.field.*;
+import quickfix.fix40.ExecutionReport;
+import quickfix.fix40.NewOrderSingle;
+
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import quickfix.ConfigError;
-import quickfix.DataDictionaryProvider;
-import quickfix.DoNotSend;
-import quickfix.FieldConvertError;
-import quickfix.FieldNotFound;
-import quickfix.IncorrectDataFormat;
-import quickfix.IncorrectTagValue;
-import quickfix.LogUtil;
-import quickfix.Message;
-import quickfix.MessageCracker;
-import quickfix.MessageUtils;
-import quickfix.RejectLogon;
-import quickfix.Session;
-import quickfix.SessionID;
-import quickfix.SessionNotFound;
-import quickfix.SessionSettings;
-import quickfix.UnsupportedMessageType;
-import quickfix.examples.executor.MarketDataProvider;
-import quickfix.field.ApplVerID;
-import quickfix.field.AvgPx;
-import quickfix.field.CumQty;
-import quickfix.field.ExecID;
-import quickfix.field.ExecTransType;
-import quickfix.field.ExecType;
-import quickfix.field.LastPx;
-import quickfix.field.LastQty;
-import quickfix.field.LastShares;
-import quickfix.field.LeavesQty;
-import quickfix.field.OrdStatus;
-import quickfix.field.OrdType;
-import quickfix.field.OrderID;
-import quickfix.field.OrderQty;
-import quickfix.field.Price;
-import quickfix.fix40.ExecutionReport;
-import quickfix.fix40.NewOrderSingle;
 
 public class FixApplication extends MessageCracker implements quickfix.Application {
     private static final String DEFAULT_MARKET_PRICE_KEY = "DefaultMarketPrice";
@@ -48,7 +19,7 @@ public class FixApplication extends MessageCracker implements quickfix.Applicati
     private static final String VALID_ORDER_TYPES_KEY = "ValidOrderTypes";
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final boolean alwaysFillLimitOrders;
-    private final HashSet<String> validOrderTypes = new HashSet();
+    private final HashSet<String> validOrderTypes = new HashSet<>();
     private MarketDataProvider marketDataProvider;
     private int m_orderID = 0;
     private int m_execID = 0;
@@ -79,7 +50,7 @@ public class FixApplication extends MessageCracker implements quickfix.Applicati
 
     }
 
-    private void initializeValidOrderTypes(SessionSettings settings) throws ConfigError, FieldConvertError {
+    private void initializeValidOrderTypes(SessionSettings settings) throws ConfigError {
         if (settings.isSetting("ValidOrderTypes")) {
             List<String> orderTypes = Arrays.asList(settings.getString("ValidOrderTypes").trim().split("\\s*,\\s*"));
             this.validOrderTypes.addAll(orderTypes);

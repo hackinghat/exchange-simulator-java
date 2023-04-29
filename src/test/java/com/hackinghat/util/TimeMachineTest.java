@@ -10,13 +10,10 @@ import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
-public class TimeMachineTest
-{
+public class TimeMachineTest {
     @Test
-    public void testStandStill()
-    {
+    public void testStandStill() {
         final Instant base = Instant.now();
         final TimeMachine tm = new TimeMachine(LocalTime.of(8, 0, 0), 0.0);
         tm.start(base);
@@ -28,10 +25,9 @@ public class TimeMachineTest
     }
 
     @Test
-    public void testHalfSpeed()
-    {
+    public void testHalfSpeed() {
         final Instant base = Instant.now();
-        final TimeMachine tm = new TimeMachine(LocalTime.of( 8, 0, 0), 0.5);
+        final TimeMachine tm = new TimeMachine(LocalTime.of(8, 0, 0), 0.5);
         tm.start(base);
         final LocalDateTime then = tm.toSimulationTime(base);
         assertEquals("08:00:00.000000", tm.formatTime(then));
@@ -42,8 +38,7 @@ public class TimeMachineTest
     }
 
     @Test
-    public void testDoubleSpeed()
-    {
+    public void testDoubleSpeed() {
         final Instant base = Instant.now();
         final TimeMachine tm = new TimeMachine(LocalTime.of(8, 0, 0), 2.0);
         tm.start(base);
@@ -56,16 +51,14 @@ public class TimeMachineTest
     }
 
     @Test
-    public void testConvertSimulationToWall()
-    {
+    public void testConvertSimulationToWall() {
         final TimeMachine tm = new TimeMachine(LocalTime.of(8, 0, 0), 2.0);
         tm.start();
         assertEquals(500L, tm.simulationPeriodToWall(Duration.of(1L, ChronoUnit.SECONDS), ChronoUnit.MILLIS));
     }
 
     @Test
-    public void testConvertSimulationTimeToWallMillis()
-    {
+    public void testConvertSimulationTimeToWallMillis() {
         final Instant now = Instant.now();
         final TimeMachine doubleSpeed = new TimeMachine(LocalTime.of(8, 0, 0), 2.0);
         doubleSpeed.start(now);
@@ -77,11 +70,10 @@ public class TimeMachineTest
     }
 
     @Test
-    public void testSimulationTimeSymmetry()
-    {
+    public void testSimulationTimeSymmetry() {
         final Instant now = Instant.now();
         final Instant wallPlus1 = now.plusMillis(1000L);
-        final TimeMachine doubleSpeed = new TimeMachine(LocalTime.of( 8, 0, 0), 2.0);
+        final TimeMachine doubleSpeed = new TimeMachine(LocalTime.of(8, 0, 0), 2.0);
         doubleSpeed.start(now);
         final Instant doublePlus1 = doubleSpeed.fromSimulationTime(doubleSpeed.toSimulationTime(wallPlus1));
         assertEquals(wallPlus1, doublePlus1);
@@ -100,7 +92,7 @@ public class TimeMachineTest
 
     @Test
     public void testFormatTimeAsUtcIso() {
-        final TimeMachine doubleSpeed = new TimeMachine(LocalTime.of( 8, 0, 0), 2.0);
+        final TimeMachine doubleSpeed = new TimeMachine(LocalTime.of(8, 0, 0), 2.0);
         final LocalDateTime random1 = LocalDateTime.of(2020, 3, 9, 9, 8, 7, 50001);
         Assert.assertEquals("2020-03-09T09:08:07.000050001", doubleSpeed.formatTimeAsUTCISO(random1));
         final LocalDateTime random2 = LocalDateTime.of(2020, 8, 9, 9, 8, 7, 50001);
@@ -109,7 +101,7 @@ public class TimeMachineTest
 
     @Test
     public void testParseTimeFromUtcIso() {
-        final TimeMachine doubleSpeed = new TimeMachine(LocalTime.of( 8, 0, 0), 2.0);
+        final TimeMachine doubleSpeed = new TimeMachine(LocalTime.of(8, 0, 0), 2.0);
         final LocalDateTime random1 = LocalDateTime.of(2020, 3, 9, 9, 8, 7, 50001);
         Assert.assertEquals(random1, doubleSpeed.parseTimeFromUTCISO("2020-03-09T09:08:07.000050001"));
         final LocalDateTime random2 = LocalDateTime.of(2020, 8, 9, 9, 8, 7, 50001);

@@ -5,35 +5,37 @@ import com.hackinghat.util.Copyable;
 import com.hackinghat.util.TimeMachine;
 import com.hackinghat.util.Timestampable;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.Collection;
 import javax.annotation.Nonnull;
+import java.time.LocalDateTime;
+import java.util.Collection;
 
-public class FullDepth implements Timestampable, Copyable
-{
-    @Nonnull
-    private LocalDateTime simulationTime;
+public class FullDepth implements Timestampable, Copyable {
     @Nonnull
     final Collection<OrderInterest> bidDepth;
     @Nonnull
     final Collection<OrderInterest> offerDepth;
+    @Nonnull
+    private LocalDateTime simulationTime;
 
-    public FullDepth(final OrderBook bid, final OrderBook offer, final TimeMachine timeMachine)
-    {
+    public FullDepth(final OrderBook bid, final OrderBook offer, final TimeMachine timeMachine) {
         // Executable levels clones the underlying order interests
         bidDepth = bid.getExecutableLevels();
         offerDepth = offer.getExecutableLevels();
         simulationTime = timeMachine.toSimulationTime();
     }
 
-    public Collection<OrderInterest> getBidDepth() { return bidDepth; }
-    public Collection<OrderInterest> getOfferDepth() { return offerDepth; }
+    @Nonnull
+    public Collection<OrderInterest> getBidDepth() {
+        return bidDepth;
+    }
 
-    public Collection<OrderInterest> getDepth(final OrderSide side)
-    {
-        switch (side)
-        {
+    @Nonnull
+    public Collection<OrderInterest> getOfferDepth() {
+        return offerDepth;
+    }
+
+    public Collection<OrderInterest> getDepth(final OrderSide side) {
+        switch (side) {
             case BUY:
                 return getBidDepth();
             case SELL:

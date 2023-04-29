@@ -2,8 +2,7 @@ package com.hackinghat.order;
 
 import java.util.EnumSet;
 
-public enum MarketState
-{
+public enum MarketState {
     /* The state prior to the beginning and at the end of the trading day */
     CLOSED,
     /* In this state the order manager is clearing the order book preparing for an auction, orders
@@ -28,12 +27,18 @@ public enum MarketState
     /**
      * Only a continuous market state will have a valid spread.   The others will either have a spread
      * of zero (CHOICE / AUCTION) or the spread will be negative (BACK)
+     *
      * @return true if the market state can be interpreted as having a spread
      */
-    public boolean hasSpread()
-    {
+    public boolean hasSpread() {
         return this == MarketState.CONTINUOUS;
     }
-    public boolean isClosed() { return this == MarketState.CLOSED; }
-    public boolean isClearingState() { return CLEARING_STATES.contains(this); }
+
+    public boolean isClosed() {
+        return this == MarketState.CLOSED;
+    }
+
+    public boolean isClearingState() {
+        return CLEARING_STATES.contains(this);
+    }
 }

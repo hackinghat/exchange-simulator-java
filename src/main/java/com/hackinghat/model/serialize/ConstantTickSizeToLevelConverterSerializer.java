@@ -3,7 +3,7 @@ package com.hackinghat.model.serialize;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.hackinghat.instrument.ConstantTickSizeToLevelConverter;
+import com.hackinghat.model.ConstantTickSizeToLevelConverter;
 
 import java.io.IOException;
 

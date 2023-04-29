@@ -9,5 +9,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MBeanAttribute {
     String description();
+
     boolean readOnly() default false;
 }

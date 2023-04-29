@@ -9,7 +9,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Optional;
 
 public class MemoryCacheSerializer extends StdSerializer<MemoryCache> {
@@ -24,7 +23,7 @@ public class MemoryCacheSerializer extends StdSerializer<MemoryCache> {
     @SuppressWarnings("unchecked")
     public void serialize(final MemoryCache memoryCache, final JsonGenerator jsonGenerator, final SerializerProvider serializerProvider) throws IOException {
         jsonGenerator.writeStartArray();
-        Object[] keys =  memoryCache.getKeys();
+        Object[] keys = memoryCache.getKeys();
         Arrays.sort(keys);
         for (final Object key : keys) {
             final Optional<?> opt = memoryCache.get(key);

@@ -1,5 +1,4 @@
 package com.hackinghat.util;
 
-public class StatisticsAppenderTest
-{
+public class StatisticsAppenderTest {
 }

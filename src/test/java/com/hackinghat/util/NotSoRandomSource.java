@@ -1,24 +1,21 @@
 package com.hackinghat.util;
 
-public class NotSoRandomSource implements RandomSource
-{
-    private int[]       intSource;
-    private int         intSourceIndex;
+public class NotSoRandomSource implements RandomSource {
+    private int[] intSource;
+    private int intSourceIndex;
 
-    private double[]    doubleSource;
-    private int         doubleSourceIndex;
+    private double[] doubleSource;
+    private int doubleSourceIndex;
 
-    public NotSoRandomSource()
-    {
+    public NotSoRandomSource() {
         intSourceIndex = 0;
         doubleSourceIndex = 0;
     }
 
-    public static RandomSource makeZeroRandom()
-    {
+    public static RandomSource makeZeroRandom() {
         NotSoRandomSource notSoRandomSource = new NotSoRandomSource();
-        notSoRandomSource.setDoubleSource(new double[] { 0.0 });
-        notSoRandomSource.setIntSource(new int[] { 0 });
+        notSoRandomSource.setDoubleSource(new double[]{0.0});
+        notSoRandomSource.setIntSource(new int[]{0});
         return notSoRandomSource;
     }
 
@@ -41,14 +38,14 @@ public class NotSoRandomSource implements RandomSource
     public int nextInt(int bound) {
         if (intSource.length == 0)
             throw new IllegalArgumentException("No ints defined");
-        return intSource[intSourceIndex = (intSourceIndex + 1)%intSource.length];
+        return intSource[intSourceIndex = (intSourceIndex + 1) % intSource.length];
     }
 
     @Override
     public double nextDouble() {
         if (doubleSource.length == 0)
             throw new IllegalArgumentException("No doubles defined");
-        return doubleSource[doubleSourceIndex = (doubleSourceIndex + 1)%doubleSource.length];
+        return doubleSource[doubleSourceIndex = (doubleSourceIndex + 1) % doubleSource.length];
     }
 
     @Override
@@ -82,5 +79,7 @@ public class NotSoRandomSource implements RandomSource
     }
 
     @Override
-    public double nextExponential(double lambda) { return nextDouble(); }
+    public double nextExponential(double lambda) {
+        return nextDouble();
+    }
 }

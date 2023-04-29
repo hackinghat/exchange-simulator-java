@@ -1,8 +1,6 @@
 package com.hackinghat.kafka;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.hackinghat.model.serialize.TradeSerializer;
 import com.hackinghat.util.SimulatorObjectMapper;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Serializer;
@@ -26,8 +24,7 @@ public class KafkaJsonSerializer<T> implements Serializer<T> {
     public byte[] serialize(final String s, final T t) {
         try {
             return mapper.writeValueAsBytes(t);
-        }
-        catch (final JsonProcessingException jpex) {
+        } catch (final JsonProcessingException jpex) {
             return null;
         }
     }

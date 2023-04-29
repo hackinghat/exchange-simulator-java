@@ -7,11 +7,9 @@ import com.hackinghat.util.Pair;
 import com.hackinghat.util.TimeMachine;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Collection;
 
-public class OrderBookStatistic implements SampledStatistic<Pair<Level1, FullDepth>>
-{
+public class OrderBookStatistic implements SampledStatistic<Pair<Level1, FullDepth>> {
     private final VarianceStatistic bidTouchPriceVar;
     private final VarianceStatistic offerTouchPriceVar;
     private final VarianceStatistic midTouchPriceVar;
@@ -25,9 +23,9 @@ public class OrderBookStatistic implements SampledStatistic<Pair<Level1, FullDep
 
     private final VarianceStatistic bidOfferSpreadVar;
 
-    private final LaggingStatistic  bidPrice;
-    private final LaggingStatistic  offerPrice;
-    private final LaggingStatistic  midPrice;
+    private final LaggingStatistic bidPrice;
+    private final LaggingStatistic offerPrice;
+    private final LaggingStatistic midPrice;
 
     private LocalDateTime simulationTime;
     private String marketState;
@@ -42,8 +40,7 @@ public class OrderBookStatistic implements SampledStatistic<Pair<Level1, FullDep
     private double midReturn;
     private double imbalance;
 
-    public OrderBookStatistic(int varPeriodLength, int lagLength)
-    {
+    public OrderBookStatistic(int varPeriodLength, int lagLength) {
         bidTouchPriceVar = new VarianceStatistic("Bid Touch Price Var", 0.0, varPeriodLength);
         offerTouchPriceVar = new VarianceStatistic("Offer Touch Price Var", 0.0, varPeriodLength);
         midTouchPriceVar = new VarianceStatistic("Mid Touch Price Var", 0.0, varPeriodLength);
@@ -60,8 +57,7 @@ public class OrderBookStatistic implements SampledStatistic<Pair<Level1, FullDep
     }
 
     @Override
-    public void update(final Pair<Level1, FullDepth> sample)
-    {
+    public void update(final Pair<Level1, FullDepth> sample) {
         if (sample == null)
             return;
 
@@ -80,9 +76,9 @@ public class OrderBookStatistic implements SampledStatistic<Pair<Level1, FullDep
         marketState = level1.getMarketState().toString();
 
         // Touch prices
-        bidTouchPrice = bid.getLevel().getPrice().doubleValue();
-        offerTouchPrice  = offer.getLevel().getPrice().doubleValue();
-        midTouchPrice = (bidTouchPrice + offerTouchPrice)/2.0;
+        bidTouchPrice = bid.getLevel().getPrice();
+        offerTouchPrice = offer.getLevel().getPrice();
+        midTouchPrice = (bidTouchPrice + offerTouchPrice) / 2.0;
         bidPrice.update(bidTouchPrice);
         offerPrice.update(offerTouchPrice);
         midPrice.update(midTouchPrice);
@@ -102,9 +98,9 @@ public class OrderBookStatistic implements SampledStatistic<Pair<Level1, FullDep
         offerTouchDepthVar.update(offerTouchDepth);
 
         // Returns
-        bidReturn = bidTouchPrice == 0 ?  0.0 : bidPrice.getValue() / bidTouchPrice;
-        offerReturn = offerTouchPrice == 0 ? 0.0: offerPrice.getValue() / offerTouchPrice;
-        midReturn = midTouchPrice == 0 ? 0.0 :  midPrice.getValue() / midTouchPrice;
+        bidReturn = bidTouchPrice == 0 ? 0.0 : bidPrice.getValue() / bidTouchPrice;
+        offerReturn = offerTouchPrice == 0 ? 0.0 : offerPrice.getValue() / offerTouchPrice;
+        midReturn = midTouchPrice == 0 ? 0.0 : midPrice.getValue() / midTouchPrice;
         bidReturnVar.update(bidReturn);
         offerReturnVar.update(offerReturn);
         midReturnVar.update(midReturn);
@@ -113,30 +109,26 @@ public class OrderBookStatistic implements SampledStatistic<Pair<Level1, FullDep
         imbalance = fullDepth == null ? 0.0 : calculateImbalance(fullDepth);
     }
 
-    public String getHeaders()
-    {
+    public String getHeaders() {
         return "T,Day#,State,Bid,Mid,Offer,Spd,BVol,OVol,BRet,MRet,ORet,SpdVar,BVar,OVar,MVar,BRetVar,MRetVar,ORetVar,BVolVar,OVolVar,Imb";
     }
 
-    private double calculateImbalance(final FullDepth fullDepth)
-    {
+    private double calculateImbalance(final FullDepth fullDepth) {
         final Collection<OrderInterest> bidDepth = fullDepth.getBidDepth();
-        double bidVol = bidDepth == null ? 0 : bidDepth.stream().mapToLong(OrderInterest::getQuantity).sum();
+        double bidVol = bidDepth.stream().mapToLong(OrderInterest::getQuantity).sum();
         final Collection<OrderInterest> offerDepth = fullDepth.getOfferDepth();
-        double offerVol = offerDepth == null ? 0 : offerDepth.stream().mapToLong(OrderInterest::getQuantity).sum();
+        double offerVol = offerDepth.stream().mapToLong(OrderInterest::getQuantity).sum();
         double totalVol = (bidVol + offerVol);
         return totalVol < 1 ? 0 : (bidVol - offerVol) / (bidVol + offerVol);
     }
 
     @Override
-    public String formatStatistic(final TimeMachine timeMachine)
-    {
+    public String formatStatistic(final TimeMachine timeMachine) {
         StringBuilder statistic = new StringBuilder();
         // A race condition may result in format statistic being called before we have been 'updated'
         // TODO: probably needs some sort of atomic int or bloolean to count the number of updates before
         // producing output
-        if (simulationTime != null)
-        {
+        if (simulationTime != null) {
             formatTime(statistic, timeMachine, simulationTime, false);
             format(statistic, null, timeMachine.getStartCount(), false);
             formatString(statistic, marketState, false);

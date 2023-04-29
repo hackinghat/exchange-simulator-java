@@ -2,19 +2,16 @@ package com.hackinghat.util;
 
 import java.util.Objects;
 
-public class Pair<First, Second>
-{
+public class Pair<First, Second> {
     private First first;
     private Second second;
 
-    public Pair(First first, Second second)
-    {
+    public Pair(First first, Second second) {
         this.first = first;
         this.second = second;
     }
 
-    public static <First, Second> Pair<First, Second> instanceOf(First first, Second second)
-    {
+    public static <First, Second> Pair<First, Second> instanceOf(First first, Second second) {
         return new Pair<>(first, second);
     }
 

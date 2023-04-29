@@ -19,8 +19,13 @@ public class MBeanHolderOperation {
         this.method = method;
     }
 
-    public String getDescription() { return description; }
-    public Method getMethod() { return method; }
+    public String getDescription() {
+        return description;
+    }
+
+    public Method getMethod() {
+        return method;
+    }
 
     MBeanOperationInfo getOperation() {
         return new MBeanOperationInfo(description, method);

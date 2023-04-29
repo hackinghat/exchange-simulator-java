@@ -2,7 +2,11 @@ package com.hackinghat.util.mbean;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import javax.management.*;
+
+import javax.management.IntrospectionException;
+import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanInfo;
+import javax.management.MBeanOperationInfo;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,8 +19,8 @@ public class MBeanBuilder {
     static String getAttributeName(final String methodName) {
         if (methodName == null)
             throw new IllegalArgumentException("Method name can not be null!");
-        final int startPoint = (methodName.length() > 3 && (methodName.startsWith("get") || methodName.startsWith("set") )) ? 3 :
-                               (methodName.length() > 2 && methodName.startsWith("is")) ? 2 : 0;
+        final int startPoint = (methodName.length() > 3 && (methodName.startsWith("get") || methodName.startsWith("set"))) ? 3 :
+                (methodName.length() > 2 && methodName.startsWith("is")) ? 2 : 0;
         final StringBuilder aName = new StringBuilder();
         boolean lastUpCase = true;
         for (int i = startPoint; i < methodName.length(); ++i) {
@@ -39,7 +43,7 @@ public class MBeanBuilder {
         return method.getParameterTypes();
     }
 
-    public static MBeanInfo getMBeanInfo(final Class<?> mbeanType, final MBeanHolderAttribute[] attrs,  final MBeanHolderOperation[] ops) {
+    public static MBeanInfo getMBeanInfo(final Class<?> mbeanType, final MBeanHolderAttribute[] attrs, final MBeanHolderOperation[] ops) {
         final MBeanType t = mbeanType.getAnnotation(MBeanType.class);
         if (t == null)
             throw new IllegalArgumentException(String.format("%s is not an MBeanType", mbeanType.getName()));
@@ -47,8 +51,7 @@ public class MBeanBuilder {
         for (final MBeanHolderAttribute a : attrs) {
             try {
                 info.add(a.getAttribute());
-            }
-            catch (IntrospectionException ex) {
+            } catch (IntrospectionException ex) {
                 LOG.error("Unexpected exception, building MBeanAttribute", ex);
             }
         }
@@ -56,7 +59,7 @@ public class MBeanBuilder {
         for (final MBeanHolderOperation op : ops) {
             opsInfo.add(op.getOperation());
         }
-        return new MBeanInfo( mbeanType.getSimpleName(), t.description(), info.toArray(new MBeanAttributeInfo[0]), null, opsInfo.toArray(new MBeanOperationInfo[0]), null );
+        return new MBeanInfo(mbeanType.getSimpleName(), t.description(), info.toArray(new MBeanAttributeInfo[0]), null, opsInfo.toArray(new MBeanOperationInfo[0]), null);
     }
 
     public static MBeanHolderAttribute[] getAttributes(final Class<?> mbeanType) {
@@ -83,8 +86,8 @@ public class MBeanBuilder {
                     }
                 } else {
                     throw new IllegalArgumentException(m.getName() + " is" +
-                            (hasReturnType ? "": " not") + " a getter and is " +
-                            (hasParameters ? "": " not") + " a setter which is not the correct contract for an MBeanAttribute");
+                            (hasReturnType ? "" : " not") + " a getter and is " +
+                            (hasParameters ? "" : " not") + " a setter which is not the correct contract for an MBeanAttribute");
                 }
             }
         }

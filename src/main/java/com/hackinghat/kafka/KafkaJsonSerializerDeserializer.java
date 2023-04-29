@@ -33,8 +33,7 @@ public class KafkaJsonSerializerDeserializer<Entity> implements Serializer<Entit
     public byte[] serialize(final String s, final Entity t) {
         try {
             return mapper.writeValueAsBytes(t);
-        }
-        catch (final JsonProcessingException jpex) {
+        } catch (final JsonProcessingException jpex) {
             LOG.error("Malformed trade object: " + jpex);
         }
         return new byte[0];
@@ -44,8 +43,7 @@ public class KafkaJsonSerializerDeserializer<Entity> implements Serializer<Entit
     public Entity deserialize(final String s, final byte[] bytes) {
         try {
             return mapper.readValue(bytes, clazz);
-        }
-        catch (final IOException desex) {
+        } catch (final IOException desex) {
             LOG.error("Malformed trade object: " + desex);
         }
         return null;

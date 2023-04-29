@@ -21,20 +21,36 @@ class MBeanHolderAttribute {
         this.description = description;
     }
 
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public Method getGetter() { return getter; }
-    public void setGetter(final Method getter) { this.getter = getter; }
-    public Method getSetter() { return setter; }
-    public void setSetter(final Method setter) { this.setter = setter; }
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Method getGetter() {
+        return getter;
+    }
+
+    public void setGetter(final Method getter) {
+        this.getter = getter;
+    }
+
+    public Method getSetter() {
+        return setter;
+    }
+
+    public void setSetter(final Method setter) {
+        this.setter = setter;
+    }
 
     public Object invokeGetter(final Object obj) {
         try {
             final Object result = getter.invoke(obj);
             return result == null ? "" : result.toString();
-        }
-        catch (IllegalAccessException|InvocationTargetException ex) {
-            LOG.error("Error getting value: " + name + ", because: " , ex);
+        } catch (IllegalAccessException | InvocationTargetException ex) {
+            LOG.error("Error getting value: " + name + ", because: ", ex);
             return ex.getMessage();
         }
     }
@@ -42,9 +58,8 @@ class MBeanHolderAttribute {
     public void invokeSetter(final Object obj, final Object arg1) {
         try {
             setter.invoke(obj, arg1);
-        }
-        catch (IllegalAccessException|InvocationTargetException ex) {
-            LOG.error("Error setting value: " + name + ", because: " , ex);
+        } catch (IllegalAccessException | InvocationTargetException ex) {
+            LOG.error("Error setting value: " + name + ", because: ", ex);
         }
     }
 

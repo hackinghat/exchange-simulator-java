@@ -8,20 +8,20 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Collection;
+import java.util.Objects;
 import java.util.function.Supplier;
 
-public class FileStatisticsAppender<T extends Statistic> extends AbstractStatisticsAppender
-{
+public class FileStatisticsAppender<T extends Statistic> extends AbstractStatisticsAppender {
     private final static DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmssSSSSSS");
-    private final static int               DEFAULT_FLUSH_ITEMS = 10;
+    private final static int DEFAULT_FLUSH_ITEMS = 10;
 
-    private final String                fileName;
-    private final Supplier<String>      headerFunction;
-    private final int                   flushLines;
+    private final String fileName;
+    private final Supplier<String> headerFunction;
+    private final int flushLines;
 
-    private BufferedWriter              writer;
-    private int                         linesWritten;
+    private BufferedWriter writer;
+    private int linesWritten;
 
     public FileStatisticsAppender(final Supplier<String> headerFunction, final Instant creationTime, final String fileName) {
         this(headerFunction, creationTime, fileName, DEFAULT_FLUSH_ITEMS);
@@ -48,8 +48,7 @@ public class FileStatisticsAppender<T extends Statistic> extends AbstractStatist
             writer.write(String.join(",", headerFunction.get()));
             writer.newLine();
             writer.flush();
-        }
-        catch (final IOException ioex) {
+        } catch (final IOException ioex) {
             throw new IllegalArgumentException("Unable to create filewriter tape", ioex);
         }
     }
@@ -60,8 +59,7 @@ public class FileStatisticsAppender<T extends Statistic> extends AbstractStatist
         try {
             writer.flush();
             writer.close();
-        }
-        catch (final IOException ioex) {
+        } catch (final IOException ioex) {
             LOG.error("Couldn't close file: " + fileName + ", reason: ", ioex);
         }
     }
@@ -76,8 +74,7 @@ public class FileStatisticsAppender<T extends Statistic> extends AbstractStatist
             }
             if (linesWritten % flushLines == 0)
                 writer.flush();
-        }
-        catch (final IOException ioex) {
+        } catch (final IOException ioex) {
             LOG.error("Couldn't log statistics, reason: ", ioex);
         }
     }

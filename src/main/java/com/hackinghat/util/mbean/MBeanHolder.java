@@ -18,15 +18,15 @@ public class MBeanHolder implements DynamicMBean {
     protected static final Logger LOG = LogManager.getLogger(AbstractComponent.class);
     private final static Map<String, MBeanHolder> MBEAN_REGISTRY = new HashMap<>();
 
-    private final Object                    sync = new Object();
-    private final MBeanHolderAttribute[]    attributes;
-    private final MBeanHolderOperation[]    operations;
-    private final MBeanInfo                 mbeanInfo;
-    private final AbstractComponent         instance;
-    private final String                    objectPrefix;
-    private       ObjectName                name;
-    private       ObjectInstance            mbeanInstance;
-    private       Throwable                 constructionPoint;
+    private final Object sync = new Object();
+    private final MBeanHolderAttribute[] attributes;
+    private final MBeanHolderOperation[] operations;
+    private final MBeanInfo mbeanInfo;
+    private final AbstractComponent instance;
+    private final String objectPrefix;
+    private ObjectName name;
+    private ObjectInstance mbeanInstance;
+    private Throwable constructionPoint;
 
     public MBeanHolder(@Nonnull final AbstractComponent instance) {
         this(instance, null);
@@ -40,7 +40,7 @@ public class MBeanHolder implements DynamicMBean {
         this.mbeanInfo = MBeanBuilder.getMBeanInfo(instanceType, attributes, operations);
         this.instance = instance;
         this.objectPrefix = prefix;
-        this.name =  null;
+        this.name = null;
         this.mbeanInstance = null;
         this.constructionPoint = new Throwable();
     }
@@ -58,16 +58,15 @@ public class MBeanHolder implements DynamicMBean {
         }
     }
 
-    public void unreigsterMBean()    {
+    public void unreigsterMBean() {
         synchronized (sync) {
             try {
                 ManagementFactory.getPlatformMBeanServer().unregisterMBean(name);
                 try {
                     ManagementFactory.getPlatformMBeanServer().unregisterMBean(name);
+                } catch (Exception ex) {
                 }
-                catch (Exception ex) {}
-            }
-            catch (InstanceNotFoundException|MBeanRegistrationException mbeanEx) {
+            } catch (InstanceNotFoundException | MBeanRegistrationException mbeanEx) {
                 LOG.trace("Instance could not be unregitered", mbeanEx);
             }
             MBEAN_REGISTRY.remove(getName().getCanonicalName());
@@ -77,11 +76,10 @@ public class MBeanHolder implements DynamicMBean {
     public ObjectName getName() {
         synchronized (sync) {
             if (name == null) {
-                final String candidateName = instance.getClass().getPackageName() + ":type=" + instance.getClass().getSimpleName() + (objectPrefix == null ? "" :   ",name="+objectPrefix );
+                final String candidateName = instance.getClass().getPackageName() + ":type=" + instance.getClass().getSimpleName() + (objectPrefix == null ? "" : ",name=" + objectPrefix);
                 try {
                     name = new ObjectName(candidateName);
-                }
-                catch (final MalformedObjectNameException mobex) {
+                } catch (final MalformedObjectNameException mobex) {
                     throw new IllegalArgumentException("Internal error, bad object name: " + candidateName, mobex);
                 }
             }
@@ -99,7 +97,9 @@ public class MBeanHolder implements DynamicMBean {
         throw new IllegalArgumentException("Unknown attribute: " + name);
     }
 
-    public AbstractComponent getInstance() { return instance; }
+    public AbstractComponent getInstance() {
+        return instance;
+    }
 
     @Override
     public Object getAttribute(String s) throws AttributeNotFoundException, MBeanException, ReflectionException {
@@ -143,13 +143,12 @@ public class MBeanHolder implements DynamicMBean {
                     if (match) {
                         return method.invoke(instance, objects);
                     }
-                }
-                catch (final Exception ex) {
+                } catch (final Exception ex) {
                     return new MBeanException(ex, "Couldn't invoke method");
                 }
             }
         }
-        throw new MBeanException(new IllegalArgumentException("No such operation found with name: '" + s + "'" ));
+        throw new MBeanException(new IllegalArgumentException("No such operation found with name: '" + s + "'"));
     }
 
     @Override

@@ -1,9 +1,11 @@
 package com.hackinghat.agent.parameter;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
-public class AgentParameterSet
-{
+public class AgentParameterSet {
     public static final String P_INSPREAD = "P_INSPREAD";
 
     private final Map<String, AgentParameter<? extends Number>> parameterMap;
@@ -15,9 +17,8 @@ public class AgentParameterSet
     }
 
     @SuppressWarnings("unchecked")
-    public <ParameterType extends Number>  ParameterType getParameter(final String parameterName)
-    {
+    public <ParameterType extends Number> ParameterType getParameter(final String parameterName) {
         Objects.requireNonNull(parameterName);
-        return (ParameterType)parameterMap.get(parameterName).next();
+        return (ParameterType) parameterMap.get(parameterName).next();
     }
 }

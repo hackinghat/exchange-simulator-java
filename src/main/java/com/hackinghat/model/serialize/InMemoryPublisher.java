@@ -18,7 +18,9 @@ public class InMemoryPublisher<E extends CopyableAndIdentifiable<E>> extends Abs
     }
 
     @MBeanAttribute(description = "totalEvents")
-    public int getTotalEvents() { return queue.size(); }
+    public int getTotalEvents() {
+        return queue.size();
+    }
 
     @Override
     public void stop() {

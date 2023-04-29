@@ -1,26 +1,17 @@
 package com.hackinghat.kafka;
 
-import java.util.Properties;
-
-//import simple producer packages
 import org.apache.kafka.clients.producer.Producer;
-
-//import KafkaProducer packages
-import org.apache.kafka.clients.producer.KafkaProducer;
-
-//import ProducerRecord packages
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.LongSerializer;
-import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 //Create java class named “SimpleProducer”
 public class KafkaProducerExample {
 
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args)  {
 
         // Check arguments length value
-        if(args.length == 0){
+        if (args.length == 0) {
             System.out.println("Enter topic name");
             return;
         }
@@ -44,9 +35,9 @@ public class KafkaProducerExample {
 //        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         final Producer<Long, String> producer = KafkaConfigBuilder.makeProducer(new LongSerializer(), new StringSerializer());
 
-        for(int i = 0; i < 10; i++)
+        for (int i = 0; i < 10; i++)
             producer.send(new ProducerRecord<>(topicName,
-                    Integer.toUnsignedLong(i), Integer.toString(i)+"X"));
+                    Integer.toUnsignedLong(i), i + "X"));
         System.out.println("Message sent successfully");
         producer.close();
     }
