@@ -1,6 +1,7 @@
 package com.hackinghat.model;
 
 import com.hackinghat.order.OrderSide;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -11,7 +12,8 @@ public class InstrumentTest  {
     private float limitPrice;
     private Level levelForLimitPrice;
 
-    protected void setUp() {
+    @Before
+    public void setUp() {
         VOD = new Instrument("VOD.L", new Currency("GBP"), new ConstantTickSizeToLevelConverter(1, 100, 3));
         limitPrice = VOD.roundToTick(150.0f);
         levelForLimitPrice = VOD.getLevel(limitPrice);
