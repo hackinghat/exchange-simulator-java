@@ -38,21 +38,25 @@ public class Touch implements Level1 {
     }
 
     @Override
+    @Nonnull
     public OrderInterest getBid() {
         return bid;
     }
 
     @Override
+    @Nonnull
     public OrderInterest getOffer() {
         return offer;
     }
 
     @Override
+    @Nonnull
     public MarketState getTouchState() {
         return touchState;
     }
 
     @Override
+    @Nonnull
     public MarketState getMarketState() {
         return marketState;
     }
@@ -79,6 +83,6 @@ public class Touch implements Level1 {
 
     @Override
     public Touch cloneEx() throws CloneNotSupportedException {
-        return Touch.class.cast(clone());
+        return (Touch) clone();
     }
 }

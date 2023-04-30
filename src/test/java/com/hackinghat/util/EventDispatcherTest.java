@@ -58,7 +58,7 @@ public class EventDispatcherTest {
         @Override
         public void notify(final Event event) {
             if (event instanceof AuctionTriggerEvent) {
-                final AuctionTriggerEvent triggerEvent = AuctionTriggerEvent.class.cast(event);
+                final AuctionTriggerEvent triggerEvent = (AuctionTriggerEvent) event;
                 if (triggerEvent.getExtensionDuration() == Duration.ZERO)
                     throw new IllegalArgumentException("event");
                 receivedEvents.add(triggerEvent);

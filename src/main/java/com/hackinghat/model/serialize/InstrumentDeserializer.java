@@ -24,7 +24,7 @@ public class InstrumentDeserializer extends StdDeserializer<Instrument> {
     }
 
     @Override
-    public Instrument deserialize(final JsonParser jsonParser, final DeserializationContext deserializationContext) throws IOException, JacksonException {
+    public Instrument deserialize(final JsonParser jsonParser, final DeserializationContext deserializationContext) throws IOException {
         final MemoryCache<String, Instrument> cache = objectCache.getCache(Instrument.class);
         final ObjectCodec codec = jsonParser.getCodec();
         final JsonNode node = codec.readTree(jsonParser);

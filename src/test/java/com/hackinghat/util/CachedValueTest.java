@@ -43,7 +43,7 @@ public class CachedValueTest {
         assertNull(cachedValue.getInProgress());
         // Trigger a scheduled request to populate the cached value
         assertNull(cachedValue.get());
-        assertEquals(1, VisForValue.class.cast(cachedValue.getInProgress().get()).getValue());
+        assertEquals(1, ((VisForValue) cachedValue.getInProgress().get()).getValue());
         assertEquals(1, cachedValue.peek().getValue());
         assertTrue(cachedValue.expired(timeMachine.toSimulationTime().plus(Duration.of(2L, ChronoUnit.MINUTES))));
     }
@@ -95,7 +95,7 @@ public class CachedValueTest {
 
         @Override
         public VisForValue cloneEx() throws CloneNotSupportedException {
-            return VisForValue.class.cast(this.clone());
+            return (VisForValue) this.clone();
         }
     }
 }

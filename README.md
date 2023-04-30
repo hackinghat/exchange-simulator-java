@@ -14,20 +14,21 @@ An equity exchange simulator that provides the following features:
 After spending a few years working on a systematic trading engine I wanted to dig deeper into the behaviour of limit
 order books of lit markets. The behaviour we were trying to profit from seemed largely random to me. Trying to read
 meaning into random behaviour is a form of madness. So what if I simulated the behaviour of a real exchange using
-purely random inputs?
+purely random inputs?  
 
 If this produced outputs and behaviours that looked like real markets that might go some way to demonstrating that
 the random behaviour **on its own** produces meaningful price movements that systematic traders can capture the spread
-on.
+of.
 
 The intention, once written was to see if there is a way to derive a real trading strategy from this. I suspect there
-is but I leave that as an exercise for the reader :smiley:.
+is but it would need to take into account lots of other factors to avoid losing a lot of money.  I leave that as an 
+exercise for the reader :smiley:.
 
 ## Getting Started
 
 ### Building the application
 
-If you would like to try this for yourself you'll need to hava a Maven installed.  
+If you would like to try the simulator for yourself you'll need to hava a Maven installed.  
 And then run the following command in the checkout path. That will compile the application into a single jar with all
 the dependencies, suitable for running inside a container.
 
@@ -73,15 +74,14 @@ If you have [Jupyter](https://jupyter.org/) installed you can re-run the noteboo
 I want to do some more work to verify the correctness of the simulator but I'd also like to try some
 other things that seem interesting:
 
-* **Tick sizes** Following MiFID2 most European exchanges have a tick size regime which changes the tick
-  size based on the turnover over of the stock. The boundaries are arbitrary numbers so given a pre-canned order flow
+* **Tick sizes** Following MiFID2 European exchanges have a tick size regime which changes the tick
+  size based on the price and the turnover over of the stock. The boundaries are arbitrary numbers so given a pre-canned order flow
   (but with un-rounded ticks!) how does the price evolve with different tick sizes.
 * **Telemetry** I'd like this to be as high performance as possible (currently the simulator has some perceived
   performance issues). So some throughput telemetry.
 * **Bad agents** Currently all the participants on the exchange are noise traders. What if we inject a quote-stuffing,
   layering bad actor into the noise. What's the minimum of bad behaviour that creates a favourable outcome for the
-  actor?
-  Could the agent detect and suppress the bad actor without any prior knowledge of who it is?
+  actor?  Could the exchange detect and suppress the bad actor without any prior knowledge of who it is?
 
 ## History
 

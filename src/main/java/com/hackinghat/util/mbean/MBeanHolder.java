@@ -26,7 +26,7 @@ public class MBeanHolder implements DynamicMBean {
     private final String objectPrefix;
     private ObjectName name;
     private ObjectInstance mbeanInstance;
-    private Throwable constructionPoint;
+    private final Throwable constructionPoint;
 
     public MBeanHolder(@Nonnull final AbstractComponent instance) {
         this(instance, null);
@@ -65,6 +65,7 @@ public class MBeanHolder implements DynamicMBean {
                 try {
                     ManagementFactory.getPlatformMBeanServer().unregisterMBean(name);
                 } catch (Exception ex) {
+                    // NOT A PROBLEM
                 }
             } catch (InstanceNotFoundException | MBeanRegistrationException mbeanEx) {
                 LOG.trace("Instance could not be unregitered", mbeanEx);
@@ -102,13 +103,13 @@ public class MBeanHolder implements DynamicMBean {
     }
 
     @Override
-    public Object getAttribute(String s) throws AttributeNotFoundException, MBeanException, ReflectionException {
+    public Object getAttribute(String s)  {
         MBeanHolderAttribute holderAttribute = getMBeanHolderAttribute(s);
         return holderAttribute.invokeGetter(instance);
     }
 
     @Override
-    public void setAttribute(Attribute attribute) throws AttributeNotFoundException, InvalidAttributeValueException, MBeanException, ReflectionException {
+    public void setAttribute(Attribute attribute)  {
         MBeanHolderAttribute holderAttribute = getMBeanHolderAttribute(attribute.getName());
         holderAttribute.invokeSetter(instance, attribute.getValue());
     }
@@ -124,7 +125,7 @@ public class MBeanHolder implements DynamicMBean {
     }
 
     @Override
-    public Object invoke(String s, Object[] objects, String[] strings) throws MBeanException, ReflectionException {
+    public Object invoke(String s, Object[] objects, String[] strings) throws MBeanException {
         for (final MBeanHolderOperation operation : operations) {
             final Method method = operation.getMethod();
             if (method.getName().equals(s)) {

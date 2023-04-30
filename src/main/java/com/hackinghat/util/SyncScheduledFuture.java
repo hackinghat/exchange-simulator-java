@@ -11,7 +11,7 @@ import java.util.concurrent.*;
 public class SyncScheduledFuture<V> implements ScheduledFuture<V> {
     private Callable<V> callable;
     private Instant executionInstant;
-    private long timeToWait;
+    private final long timeToWait;
     private V result;
     private boolean done;
 

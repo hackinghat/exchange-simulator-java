@@ -32,7 +32,6 @@ public class OrderManagerTest {
     private MarketManager marketManager;
     private long cId;
     private SyncEventDispatcher dispatcher;
-    private Level referencePrice;
     private int nMBeans;
 
     @Before
@@ -42,7 +41,7 @@ public class OrderManagerTest {
         tape = new StatisticsAppenderTestHelper();
         timeMachine = new TimeMachine();
         dispatcher = new SyncEventDispatcher(timeMachine);
-        referencePrice = VOD.getLevel(100.0f);
+        Level referencePrice = VOD.getLevel(100.0f);
         marketManager = new MarketManager(referencePrice, 0.1, Duration.of(5L, ChronoUnit.MINUTES), timeMachine, dispatcher, new AuctionSchedule());
         manager = new OrderManager(marketManager, timeMachine, null, MarketState.CONTINUOUS, VOD, dispatcher, tape, null, Duration.ZERO);
         cId = 0;
@@ -118,13 +117,17 @@ public class OrderManagerTest {
         return last;
     }
 
-    @SuppressWarnings("SameParameterValue")
-    /** Makes a book where side1 is used to build a book with orders at a range of fixed interval prices equal to :
-     *      startLimit +- (nLevels * tickSize).  The arguments are defined to
+    /**
+     * Makes a book where side1 is used to build a book with orders at a range of fixed interval prices equal to :
+     *      startLimit +- (nLevels * tickSize).
+     *
+     * @param nLevels how many levels to add
      * @param side1 the side which will have positive adjustment applied to the price (usually the bid side for a book
      *              with no cross-able quantity)
      * @param side2 the side which will have a negative adjustment applied to the price (usually the offer side for a book
-     *              with no cross-able quantity)*/
+     *              with no cross-able quantity)
+     * @param quantity the quantity (will be the same for each level) */
+    @SuppressWarnings("SameParameterValue")
     private void makeBook(int nLevels, OrderSide side1, OrderSide side2, final Level startLimit, int quantity) {
         for (int i = 0; i < nLevels; ++i) {
             submitLimit(side1 == OrderSide.BUY ? buyer : seller, side1, VOD.worsenOnBook(startLimit, side1, i + 1).getPrice(), manager, quantity);
@@ -385,7 +388,7 @@ public class OrderManagerTest {
         assertEquals("There were more or fewer prints than expected", tradeQuantities.length, tape.getStatistics().size());
         int i = 0;
         for (final Statistic statistic : tape.getStatistics()) {
-            Trade t = Trade.class.cast(statistic);
+            Trade t = (Trade) statistic;
             assertEquals("Execution# " + i, tradeQuantities[i], t.getQuantity().intValue());
             assertEquals("Execution# " + i, tradePrices[i], t.getLevel().getPrice(), t.getLevel().getTickSize());
             i++;
@@ -400,6 +403,7 @@ public class OrderManagerTest {
              final AuctionStateTestHelper testHelper = new AuctionStateTestHelper(timeMachine, LLOY, referenceLevel, auction)) {
             AuctionState state = testHelper.makeState1();
             assertEquals(0, tape.size());
+            checkInterest(auction, LLOY.getLevel(104.5f), 5600, 1000);
             auction.uncross();
             // The executions should occur in priority order so the prints are predictable
             checkTape(new int[]{2500, 6900, 600, 400}, new float[]{104.5f, 104.5f, 104.5f, 104.5f});
@@ -447,11 +451,9 @@ public class OrderManagerTest {
     /**
      * When an auction occurs as a result of price monitoring it should happen immediately, there should be
      * no possibility that another trade can cross before the auction occurs
-     *
-     * @throws Exception
-     */
+     **/
     @Test
-    public void testPriceMonitoringAuctionImmediateCancel() throws Exception {
+    public void testPriceMonitoringAuctionImmediateCancel() {
         final Instrument LLOY = new Instrument("LLOY.L", new Currency("GBP"), new ConstantTickSizeToLevelConverter(1, 100, 3));
         final Level referenceLevel = LLOY.getLevel(100.0f);
         try (final OrderManager auction = new OrderManager(marketManager, timeMachine, referenceLevel, MarketState.CONTINUOUS, LLOY, dispatcher, tape, null, Duration.ZERO)) {

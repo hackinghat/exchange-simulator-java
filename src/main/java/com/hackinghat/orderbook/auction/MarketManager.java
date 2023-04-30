@@ -153,11 +153,11 @@ public class MarketManager extends AbstractComponent implements Listener {
         // We only want one notification to occur concurrently
         synchronized (sync) {
             if (event instanceof AuctionTriggerEvent)
-                notifyAuctionEvent(AuctionTriggerEvent.class.cast(event));
+                notifyAuctionEvent((AuctionTriggerEvent) event);
             else if (event instanceof TimeSpeedChangeEvent)
-                notifyTimeEvent(TimeSpeedChangeEvent.class.cast(event));
+                notifyTimeEvent((TimeSpeedChangeEvent) event);
             else if (event instanceof MarketStateEvent)
-                notifyMarketStateEvent(MarketStateEvent.class.cast(event));
+                notifyMarketStateEvent((MarketStateEvent) event);
             else
                 throw new IllegalArgumentException("Found unexpected event type: " + event);
         }

@@ -239,7 +239,7 @@ public class Order extends Event implements Statistic {
      */
     private void notifyAgent() {
         if (sender != null) {
-            sender.orderUpdate(Order.class.cast(this.copy()));
+            sender.orderUpdate((Order) this.copy());
         }
     }
 

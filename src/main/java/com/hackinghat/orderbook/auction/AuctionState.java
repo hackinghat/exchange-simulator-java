@@ -283,7 +283,7 @@ public class AuctionState implements Level1 {
 
     @Override
     public AuctionState cloneEx() throws CloneNotSupportedException {
-        return AuctionState.class.cast(clone());
+        return (AuctionState) clone();
     }
 
     private static class AuctionRecord implements Comparable<AuctionRecord> {

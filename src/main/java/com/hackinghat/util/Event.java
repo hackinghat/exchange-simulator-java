@@ -2,6 +2,7 @@ package com.hackinghat.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import javax.annotation.Nonnull;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -42,12 +43,12 @@ public abstract class Event implements Copyable<Event>, Comparable<Event> {
 
     @Override
     public Event cloneEx() throws CloneNotSupportedException {
-        return Event.class.cast(clone());
+        return (Event) clone();
     }
 
 
     @Override
-    public int compareTo(final Event o) {
+    public int compareTo(@Nonnull  final Event o) {
         Objects.requireNonNull(o);
         Objects.requireNonNull(simulationTime);
         return simulationTime.compareTo(o.simulationTime);

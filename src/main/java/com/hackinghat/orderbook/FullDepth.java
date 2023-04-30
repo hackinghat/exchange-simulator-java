@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 import java.time.LocalDateTime;
 import java.util.Collection;
 
-public class FullDepth implements Timestampable, Copyable {
+public class FullDepth implements Timestampable, Copyable<FullDepth> {
     @Nonnull
     final Collection<OrderInterest> bidDepth;
     @Nonnull
@@ -57,6 +57,6 @@ public class FullDepth implements Timestampable, Copyable {
 
     @Override
     public FullDepth cloneEx() throws CloneNotSupportedException {
-        return FullDepth.class.cast(clone());
+        return (FullDepth) clone();
     }
 }

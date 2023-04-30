@@ -20,7 +20,7 @@ class RandomObject implements CopyableAndIdentifiable<String> {
 
     @Override
     public RandomObject cloneEx() throws CloneNotSupportedException {
-        return RandomObject.class.cast(this.clone());
+        return (RandomObject) this.clone();
     }
 
     @Override
